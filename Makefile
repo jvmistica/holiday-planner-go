@@ -19,3 +19,8 @@ install:
 
 vulncheck:
 	@govulncheck ./...
+
+pre-commit:
+	@pip3 install pre-commit
+	@pre-commit install
+	@curl -sSfL https://raw.githubusercontent.com/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.52.1
