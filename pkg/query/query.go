@@ -15,6 +15,7 @@ import (
 var (
 	defaultCalendarID = "en.austrian#holiday@group.v.calendar.google.com"
 	defaultTimeFormat = "2006-01-02T00:00:00Z"
+	defaultResultDir  = "./pkg/query/data/%s"
 	key               = os.Getenv("GCP_API_KEY")
 )
 
@@ -39,20 +40,50 @@ func Query(key string, start *string, end *string, calendarID *string) {
 	query := fmt.Sprintf("key=%s&timeMin=%s&timeMax=%s", key, *start, *end)
 	url := fmt.Sprintf("https://www.googleapis.com/calendar/v3/calendars/%s/events?"+query, id)
 
-	resp, err := http.Get(url)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	var events *Events
-	if err := json.Unmarshal(body, &events); err != nil {
-		log.Fatal(err)
+	filePath := fmt.Sprintf(defaultResultDir, *calendarID)
+
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		fmt.Println("Initiating GET request..")
+
+		f, err := os.Create(filePath)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer f.Close()
+
+		resp, err := http.Get(url)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		defer resp.Body.Close()
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if err := json.Unmarshal(body, &events); err != nil {
+			log.Fatal(err)
+		}
+
+		s, err := json.MarshalIndent(events, "", "    ")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		f.Write(s)
+	} else {
+		fmt.Println("Skipping GET request..")
+
+		data, err := os.ReadFile(filePath)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if err := json.Unmarshal(data, &events); err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	holidays, err := getHolidays(events)
