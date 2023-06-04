@@ -9,6 +9,12 @@ import (
 
 var (
 	defaultCalendarID = "en.austrian#holiday@group.v.calendar.google.com"
+	defaultBoardName  = "Holidays"
+	suggestion        = "Leave Suggestions"
+	q1                = "Jan - Mar"
+	q2                = "Apr - Jun"
+	q3                = "Jul - Sep"
+	q4                = "Oct - Dec"
 	key               = os.Getenv("GCP_API_KEY")
 )
 
@@ -21,4 +27,35 @@ func main() {
 	flag.Parse()
 
 	query.Query(key, start, end, calendarID)
+
+	// boardID, err := query.CreateBoard("Holidays")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// fmt.Println("Board ID:", boardID)
+
+	// suggestListID, err := query.CreateList(boardID, suggestion, "1")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// q1ListID, err := query.CreateList(boardID, q1, "2")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// q2ListID, err := query.CreateList(boardID, q2, "3")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// q3ListID, err := query.CreateList(boardID, q3, "4")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// q4ListID, err := query.CreateList(boardID, q4, "5")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 }

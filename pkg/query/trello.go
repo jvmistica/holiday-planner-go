@@ -1,8 +1,9 @@
 package query
 
 import (
+	"encoding/json"
 	"fmt"
-	"log"
+	"io"
 	"net/http"
 	"os"
 )
@@ -13,12 +14,16 @@ var (
 	trelloAPIToken    = os.Getenv("TRELLO_API_TOKEN")
 )
 
-func createBoard(board string) error {
+type Response struct {
+	ID string `json:"id"`
+}
+
+func CreateBoard(board string) (string, error) {
 	client := &http.Client{}
 	url := "https://api.trello.com/1/boards/"
 	req, err := http.NewRequest(http.MethodPost, url, nil)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 
 	q := req.URL.Query()
@@ -30,22 +35,34 @@ func createBoard(board string) error {
 
 	res, err := client.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 
 	if res.StatusCode != http.StatusOK && err != nil {
-		return fmt.Errorf("failed to create board. status code: %d, error: %s", res.StatusCode, err.Error())
+		return "", fmt.Errorf("failed to create board. status code: %d, error: %s", res.StatusCode, err.Error())
 	}
 
-	return nil
+	defer res.Body.Close()
+
+	b, err := io.ReadAll(res.Body)
+	if err != nil {
+		return "", err
+	}
+
+	var response *Response
+	if err := json.Unmarshal(b, &response); err != nil {
+		return "", err
+	}
+
+	return response.ID, nil
 }
 
-func createList(board, list, position string) error {
+func CreateList(board, list, position string) (string, error) {
 	client := &http.Client{}
 	url := fmt.Sprintf("https://api.trello.com/1/boards/%s/lists", board)
 	req, err := http.NewRequest(http.MethodPost, url, nil)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 
 	q := req.URL.Query()
@@ -57,22 +74,34 @@ func createList(board, list, position string) error {
 
 	res, err := client.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 
 	if res.StatusCode != http.StatusOK && err != nil {
-		return fmt.Errorf("failed to create list. status code: %d, error: %s", res.StatusCode, err.Error())
+		return "", fmt.Errorf("failed to create list. status code: %d, error: %s", res.StatusCode, err.Error())
 	}
 
-	return nil
+	defer res.Body.Close()
+
+	b, err := io.ReadAll(res.Body)
+	if err != nil {
+		return "", err
+	}
+
+	var response *Response
+	if err := json.Unmarshal(b, &response); err != nil {
+		return "", err
+	}
+
+	return response.ID, nil
 }
 
-func createCard(list, card string) error {
+func CreateCard(list, card string) (string, error) {
 	client := &http.Client{}
 	url := "https://api.trello.com/1/cards"
 	req, err := http.NewRequest(http.MethodPost, url, nil)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 
 	q := req.URL.Query()
@@ -84,12 +113,24 @@ func createCard(list, card string) error {
 
 	res, err := client.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 
 	if res.StatusCode != http.StatusOK && err != nil {
-		return fmt.Errorf("failed to create list. status code: %d, error: %s", res.StatusCode, err.Error())
+		return "", fmt.Errorf("failed to create list. status code: %d, error: %s", res.StatusCode, err.Error())
 	}
 
-	return nil
+	defer res.Body.Close()
+
+	b, err := io.ReadAll(res.Body)
+	if err != nil {
+		return "", err
+	}
+
+	var response *Response
+	if err := json.Unmarshal(b, &response); err != nil {
+		return "", err
+	}
+
+	return response.ID, nil
 }
