@@ -19,12 +19,13 @@ To get Trello API key and token:
 1. Go to https://trello.com/power-ups/admin
 2. Select an existing power-up and integration or create a new one
 3. Select "API key" -> "Generate a new API key"
+4. Follow the link to generate a token
 
 ### Environment Variables
 ```
 export GCP_API_KEY=<gcp-api-key>
 export TRELLO_API_KEY=<trello-api-key>
-export TRELLO_SECRET=<trello-secret>
+export TRELLO_API_TOKEN=<trello-api-token>
 ```
 
 ## Usage
