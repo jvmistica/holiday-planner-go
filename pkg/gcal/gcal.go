@@ -1,4 +1,4 @@
-package query
+package gcal
 
 import (
 	"encoding/json"
@@ -15,7 +15,7 @@ import (
 var (
 	defaultCalendarID          = "en.austrian#holiday@group.v.calendar.google.com"
 	defaultTimeFormat          = "2006-01-02T00:00:00Z"
-	defaultResultDir           = "./pkg/query/data/%s"
+	defaultResultDir           = "./pkg/gcal/data/%s"
 	defaultMinDaysWithoutLeave = 3
 	key                        = os.Getenv("GCP_API_KEY")
 )

@@ -1,4 +1,4 @@
-package query
+package trello
 
 import (
 	"encoding/json"

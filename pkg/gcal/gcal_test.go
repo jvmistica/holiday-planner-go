@@ -1,4 +1,4 @@
-package query
+package gcal
 
 import (
 	"encoding/json"
