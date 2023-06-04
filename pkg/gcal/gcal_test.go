@@ -1,4 +1,4 @@
-package query
+package gcal
 
 import (
 	"encoding/json"
@@ -57,19 +57,14 @@ func TestGetWeekends(t *testing.T) {
 	}
 }
 
-func TestGetAllFreeTime(t *testing.T) {
-	holidays := `["2023-05-28T00:00:00Z", "2023-05-29T00:00:00Z"]`
-	weekends := `["2023-05-27T00:00:00Z", "2023-05-28T00:00:00Z"]`
+func TestGetVacationsWithoutLeaves(t *testing.T) {
+	dates := `["2023-05-28T00:00:00Z", "2023-05-29T00:00:00Z", "2023-05-27T00:00:00Z", "2023-05-28T00:00:00Z"]`
 
-	var h []time.Time
-	err := json.Unmarshal([]byte(holidays), &h)
+	var free []time.Time
+	err := json.Unmarshal([]byte(dates), &free)
 	assert.Nil(t, err)
 
-	var w []time.Time
-	err = json.Unmarshal([]byte(weekends), &w)
-	assert.Nil(t, err)
-
-	freeTime := getAllFreeTime(h, w)
-	assert.Equal(t, 1, len(freeTime))
-	assert.Equal(t, "3", freeTime[0]["count"])
+	result := getVacationsWithoutLeaves(free)
+	assert.Equal(t, 1, len(result))
+	assert.Equal(t, "3", result[0]["count"])
 }

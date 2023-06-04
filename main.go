@@ -4,7 +4,8 @@ import (
 	"flag"
 	"os"
 
-	"github.com/jvmistica/gcal/pkg/query"
+	"github.com/jvmistica/gcal/pkg/gcal"
+	// "github.com/jvmistica/gcal/pkg/trello"
 )
 
 var (
@@ -20,5 +21,36 @@ func main() {
 	end := flag.String("end", "", "the end date")
 	flag.Parse()
 
-	query.Query(key, start, end, calendarID)
+	gcal.Query(key, start, end, calendarID)
+
+	// boardID, err := trello.CreateBoard("Holidays")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// fmt.Println("Board ID:", boardID)
+
+	// suggestListID, err := trello.CreateList(boardID, suggestion, "1")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// q1ListID, err := trello.CreateList(boardID, q1, "2")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// q2ListID, err := trello.CreateList(boardID, q2, "3")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// q3ListID, err := trello.CreateList(boardID, q3, "4")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// q4ListID, err := trello.CreateList(boardID, q4, "5")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 }

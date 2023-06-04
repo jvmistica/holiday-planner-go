@@ -1,4 +1,4 @@
-package query
+package gcal
 
 import (
 	"encoding/json"
@@ -13,10 +13,11 @@ import (
 )
 
 var (
-	defaultCalendarID = "en.austrian#holiday@group.v.calendar.google.com"
-	defaultTimeFormat = "2006-01-02T00:00:00Z"
-	defaultResultDir  = "./pkg/query/data/%s"
-	key               = os.Getenv("GCP_API_KEY")
+	defaultCalendarID          = "en.austrian#holiday@group.v.calendar.google.com"
+	defaultTimeFormat          = "2006-01-02T00:00:00Z"
+	defaultResultDir           = "./pkg/gcal/data/%s"
+	defaultMinDaysWithoutLeave = 3
+	key                        = os.Getenv("GCP_API_KEY")
 )
 
 // Events is the structure of the response from the calendar API
@@ -41,7 +42,7 @@ func Query(key string, start *string, end *string, calendarID *string) {
 	url := fmt.Sprintf("https://www.googleapis.com/calendar/v3/calendars/%s/events?"+query, id)
 
 	var events *Events
-	filePath := fmt.Sprintf(defaultResultDir, *calendarID)
+	filePath := fmt.Sprintf(defaultResultDir, fmt.Sprintf("%s.%s", *calendarID, "json"))
 
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		fmt.Println("Initiating GET request..")
@@ -96,8 +97,9 @@ func Query(key string, start *string, end *string, calendarID *string) {
 		log.Fatal(err)
 	}
 
-	freeTime := getAllFreeTime(holidays, weekends)
-	s, _ := json.MarshalIndent(freeTime, "", "    ")
+	freeTime := formatFreeTime(holidays, weekends)
+	vacationWithoutLeaves := getVacationsWithoutLeaves(freeTime)
+	s, _ := json.MarshalIndent(vacationWithoutLeaves, "", "    ")
 	fmt.Println(string(s))
 }
 
@@ -137,16 +139,9 @@ func getWeekends(startDate, endDate string) ([]time.Time, error) {
 	return weekends, nil
 }
 
-// getAllFreeTime returns a combination of holiday and weekend dates (sorted and duplicates removed)
-func getAllFreeTime(holidays, weekends []time.Time) []map[string]string {
-	var freeTime []time.Time
-	freeTime = append(freeTime, holidays...)
-	freeTime = append(freeTime, weekends...)
-
-	sort.Slice(freeTime, func(i, j int) bool {
-		return freeTime[i].Before(freeTime[j])
-	})
-
+// getVacationsWithoutLeaves returns free time of 3 (default) or more days where filing a vacation leave
+// is not needed (i.e. long weekends)
+func getVacationsWithoutLeaves(freeTime []time.Time) []map[string]string {
 	var toDate time.Time
 	days := 0
 	fromDate := freeTime[0]
@@ -165,7 +160,7 @@ func getAllFreeTime(holidays, weekends []time.Time) []map[string]string {
 			}
 		}
 
-		if days >= 3 {
+		if days >= defaultMinDaysWithoutLeave {
 			date := make(map[string]string)
 			date["start"] = fromDate.String()
 			date["end"] = toDate.String()
@@ -177,4 +172,19 @@ func getAllFreeTime(holidays, weekends []time.Time) []map[string]string {
 	}
 
 	return dates
+}
+
+// func getSuggestions(holidays, weekends []time.Time) []map[string]string {
+// }
+
+func formatFreeTime(holidays, weekends []time.Time) []time.Time {
+	var freeTime []time.Time
+	freeTime = append(freeTime, holidays...)
+	freeTime = append(freeTime, weekends...)
+
+	sort.Slice(freeTime, func(i, j int) bool {
+		return freeTime[i].Before(freeTime[j])
+	})
+
+	return freeTime
 }

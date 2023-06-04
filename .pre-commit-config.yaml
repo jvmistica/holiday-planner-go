@@ -5,4 +5,3 @@ repos:
       - id: go-fmt
         args: [-w]
       - id: go-mod-tidy
-      - id: golangci-lint
