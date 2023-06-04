@@ -10,12 +10,6 @@ import (
 
 var (
 	defaultCalendarID = "en.austrian#holiday@group.v.calendar.google.com"
-	defaultBoardName  = "Holidays"
-	suggestion        = "Leave Suggestions"
-	q1                = "Jan - Mar"
-	q2                = "Apr - Jun"
-	q3                = "Jul - Sep"
-	q4                = "Oct - Dec"
 	key               = os.Getenv("GCP_API_KEY")
 )
 

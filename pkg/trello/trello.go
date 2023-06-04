@@ -9,9 +9,18 @@ import (
 )
 
 var (
+	defaultBoardName  = "Holidays"
+	suggestion        = "Leave Suggestions"
+	q1                = "Jan - Mar"
+	q2                = "Apr - Jun"
+	q3                = "Jul - Sep"
+	q4                = "Oct - Dec"
 	defaultBackground = "sky"
 	trelloAPIKey      = os.Getenv("TRELLO_API_KEY")
 	trelloAPIToken    = os.Getenv("TRELLO_API_TOKEN")
+	createBoardURL    = "https://api.trello.com/1/boards/"
+	createCardURL     = "https://api.trello.com/1/cards"
+	createListURL     = "https://api.trello.com/1/boards/%s/lists"
 )
 
 type Response struct {
@@ -20,8 +29,7 @@ type Response struct {
 
 func CreateBoard(board string) (string, error) {
 	client := &http.Client{}
-	url := "https://api.trello.com/1/boards/"
-	req, err := http.NewRequest(http.MethodPost, url, nil)
+	req, err := http.NewRequest(http.MethodPost, createBoardURL, nil)
 	if err != nil {
 		return "", err
 	}
@@ -38,8 +46,8 @@ func CreateBoard(board string) (string, error) {
 		return "", err
 	}
 
-	if res.StatusCode != http.StatusOK && err != nil {
-		return "", fmt.Errorf("failed to create board. status code: %d, error: %s", res.StatusCode, err.Error())
+	if res.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("failed to create board - status code: %d", res.StatusCode)
 	}
 
 	defer res.Body.Close()
@@ -59,7 +67,7 @@ func CreateBoard(board string) (string, error) {
 
 func CreateList(board, list, position string) (string, error) {
 	client := &http.Client{}
-	url := fmt.Sprintf("https://api.trello.com/1/boards/%s/lists", board)
+	url := fmt.Sprintf(createListURL, board)
 	req, err := http.NewRequest(http.MethodPost, url, nil)
 	if err != nil {
 		return "", err
@@ -77,8 +85,8 @@ func CreateList(board, list, position string) (string, error) {
 		return "", err
 	}
 
-	if res.StatusCode != http.StatusOK && err != nil {
-		return "", fmt.Errorf("failed to create list. status code: %d, error: %s", res.StatusCode, err.Error())
+	if res.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("failed to create board - status code: %d", res.StatusCode)
 	}
 
 	defer res.Body.Close()
@@ -98,8 +106,7 @@ func CreateList(board, list, position string) (string, error) {
 
 func CreateCard(list, card string) (string, error) {
 	client := &http.Client{}
-	url := "https://api.trello.com/1/cards"
-	req, err := http.NewRequest(http.MethodPost, url, nil)
+	req, err := http.NewRequest(http.MethodPost, createCardURL, nil)
 	if err != nil {
 		return "", err
 	}
@@ -116,8 +123,8 @@ func CreateCard(list, card string) (string, error) {
 		return "", err
 	}
 
-	if res.StatusCode != http.StatusOK && err != nil {
-		return "", fmt.Errorf("failed to create list. status code: %d, error: %s", res.StatusCode, err.Error())
+	if res.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("failed to create board - status code: %d", res.StatusCode)
 	}
 
 	defer res.Body.Close()
