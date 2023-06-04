@@ -2,7 +2,6 @@ package query
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"os"
@@ -14,7 +13,7 @@ var (
 	trelloAPIToken    = os.Getenv("TRELLO_API_TOKEN")
 )
 
-func createBoard(board string) string {
+func createBoard(board string) error {
 	client := &http.Client{}
 	url := "https://api.trello.com/1/boards/"
 	req, err := http.NewRequest(http.MethodPost, url, nil)
@@ -34,16 +33,14 @@ func createBoard(board string) string {
 		log.Fatal(err)
 	}
 
-	defer res.Body.Close()
-	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		log.Fatal(err)
+	if res.StatusCode != http.StatusOK && err != nil {
+		return fmt.Errorf("failed to create board. status code: %d, error: %s", res.StatusCode, err.Error())
 	}
 
-	return string(body)
+	return nil
 }
 
-func createList(board, list, position string) {
+func createList(board, list, position string) error {
 	client := &http.Client{}
 	url := fmt.Sprintf("https://api.trello.com/1/boards/%s/lists", board)
 	req, err := http.NewRequest(http.MethodPost, url, nil)
@@ -62,10 +59,15 @@ func createList(board, list, position string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(res, err)
+
+	if res.StatusCode != http.StatusOK && err != nil {
+		return fmt.Errorf("failed to create list. status code: %d, error: %s", res.StatusCode, err.Error())
+	}
+
+	return nil
 }
 
-func createCard(list, card string) {
+func createCard(list, card string) error {
 	client := &http.Client{}
 	url := "https://api.trello.com/1/cards"
 	req, err := http.NewRequest(http.MethodPost, url, nil)
@@ -84,5 +86,10 @@ func createCard(list, card string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(res, err)
+
+	if res.StatusCode != http.StatusOK && err != nil {
+		return fmt.Errorf("failed to create list. status code: %d, error: %s", res.StatusCode, err.Error())
+	}
+
+	return nil
 }
