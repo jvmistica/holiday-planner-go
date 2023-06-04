@@ -99,6 +99,10 @@ func Query(key string, start *string, end *string, calendarID *string) {
 	freeTime := getAllFreeTime(holidays, weekends)
 	s, _ := json.MarshalIndent(freeTime, "", "    ")
 	fmt.Println(string(s))
+
+	var resp string
+	resp = createBoard("test")
+	fmt.Println(resp)
 }
 
 // getHolidays returns a map of holidays and their date
