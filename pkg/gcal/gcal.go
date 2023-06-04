@@ -42,7 +42,7 @@ func Query(key string, start *string, end *string, calendarID *string) {
 	url := fmt.Sprintf("https://www.googleapis.com/calendar/v3/calendars/%s/events?"+query, id)
 
 	var events *Events
-	filePath := fmt.Sprintf(defaultResultDir, *calendarID)
+	filePath := fmt.Sprintf(defaultResultDir, fmt.Sprintf("%s.%s", *calendarID, "json"))
 
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		fmt.Println("Initiating GET request..")

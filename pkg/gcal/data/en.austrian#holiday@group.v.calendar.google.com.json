@@ -1,0 +1,41 @@
+{
+    "summary": "Holidays in Austria",
+    "nextSyncToken": "CMCPpYjgpv8CEAAYASCwlun_AQ==",
+    "items": [
+        {
+            "summary": "Labor Day / May Day",
+            "description": "Public holiday",
+            "start": {
+                "date": "2023-05-01"
+            }
+        },
+        {
+            "summary": "Mother's Day",
+            "description": "Observance\nTo hide observances, go to Google Calendar Settings \u003e Holidays in Austria",
+            "start": {
+                "date": "2023-05-14"
+            }
+        },
+        {
+            "summary": "Ascension Day",
+            "description": "Public holiday",
+            "start": {
+                "date": "2023-05-18"
+            }
+        },
+        {
+            "summary": "Whit Sunday",
+            "description": "Observance\nTo hide observances, go to Google Calendar Settings \u003e Holidays in Austria",
+            "start": {
+                "date": "2023-05-28"
+            }
+        },
+        {
+            "summary": "Whit Monday",
+            "description": "Public holiday",
+            "start": {
+                "date": "2023-05-29"
+            }
+        }
+    ]
+}
