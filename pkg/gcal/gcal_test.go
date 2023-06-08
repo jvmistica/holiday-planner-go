@@ -68,3 +68,53 @@ func TestGetVacationsWithoutLeaves(t *testing.T) {
 	assert.Equal(t, 1, len(result))
 	assert.Equal(t, "3", result[0]["count"])
 }
+
+func TestGetSuggestions(t *testing.T) {
+	t.Run("one pair", func(t *testing.T) {
+		dates := `[{"start": "2023-05-24T00:00:00Z", "end": "2023-05-28T00:00:00Z"}]`
+
+		var free []map[string]string
+		err := json.Unmarshal([]byte(dates), &free)
+		assert.Nil(t, err)
+
+		result, err := getSuggestions(free)
+		assert.Nil(t, err)
+		assert.Nil(t, result)
+	})
+
+	t.Run("two pairs", func(t *testing.T) {
+		dates := `[{"start": "2023-05-24T00:00:00Z", "end": "2023-05-25T00:00:00Z"}, {"start": "2023-05-27T00:00:00Z", "end": "2023-05-28T00:00:00Z"}]`
+
+		var free []map[string]string
+		err := json.Unmarshal([]byte(dates), &free)
+		assert.Nil(t, err)
+
+		result, err := getSuggestions(free)
+		assert.Nil(t, err)
+		assert.Equal(t, 1, len(result))
+		assert.Equal(t, "5", result[0].Vacation)
+		assert.Equal(t, "1", result[0].Leaves)
+		assert.Equal(t, "2023-05-24T00:00:00Z", result[0].Start)
+		assert.Equal(t, "2023-05-28T00:00:00Z", result[0].End)
+	})
+
+	t.Run("three pairs", func(t *testing.T) {
+		dates := `[{"start": "2023-05-22T00:00:00Z", "end": "2023-05-23T00:00:00Z"}, {"start": "2023-05-24T00:00:00Z", "end": "2023-05-25T00:00:00Z"}, {"start": "2023-05-27T00:00:00Z", "end": "2023-05-28T00:00:00Z"}]`
+
+		var free []map[string]string
+		err := json.Unmarshal([]byte(dates), &free)
+		assert.Nil(t, err)
+
+		result, err := getSuggestions(free)
+		assert.Nil(t, err)
+		assert.Equal(t, 2, len(result))
+		assert.Equal(t, "4", result[0].Vacation)
+		assert.Equal(t, "0", result[0].Leaves)
+		assert.Equal(t, "2023-05-22T00:00:00Z", result[0].Start)
+		assert.Equal(t, "2023-05-25T00:00:00Z", result[0].End)
+		assert.Equal(t, "5", result[1].Vacation)
+		assert.Equal(t, "1", result[1].Leaves)
+		assert.Equal(t, "2023-05-24T00:00:00Z", result[1].Start)
+		assert.Equal(t, "2023-05-28T00:00:00Z", result[1].End)
+	})
+}

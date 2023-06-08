@@ -174,8 +174,57 @@ func getVacationsWithoutLeaves(freeTime []time.Time) []map[string]string {
 	return dates
 }
 
-// func getSuggestions(holidays, weekends []time.Time) []map[string]string {
-// }
+type Suggestion struct {
+	Vacation string
+	Leaves   string
+	Start    string
+	End      string
+}
+
+func getSuggestions(pairs []map[string]string) ([]*Suggestion, error) {
+	var suggestions []*Suggestion
+	for i, d := range pairs {
+		if i >= len(pairs)-1 {
+			continue
+		}
+
+		start, err := time.Parse(defaultTimeFormat, d["start"])
+		if err != nil {
+			return nil, err
+		}
+
+		end, err := time.Parse(defaultTimeFormat, d["end"])
+		if err != nil {
+			return nil, err
+		}
+
+		nextStart, err := time.Parse(defaultTimeFormat, pairs[i+1]["start"])
+		if err != nil {
+			return nil, err
+		}
+
+		nextEnd, err := time.Parse(defaultTimeFormat, pairs[i+1]["end"])
+		if err != nil {
+			return nil, err
+		}
+
+		leaves := nextStart.Sub(end).Hours() / 24
+		if leaves <= 5 {
+			vacation := (end.Sub(start).Hours() / 24) + (nextEnd.Sub(nextStart).Hours() / 24) + leaves
+			if vacation-leaves > 1 {
+				suggestions = append(suggestions,
+					&Suggestion{
+						Vacation: fmt.Sprint(vacation + 1),
+						Leaves:   fmt.Sprint(leaves - 1),
+						Start:    d["start"],
+						End:      pairs[i+1]["end"],
+					})
+			}
+		}
+	}
+
+	return suggestions, nil
+}
 
 func formatFreeTime(holidays, weekends []time.Time) []time.Time {
 	var freeTime []time.Time
