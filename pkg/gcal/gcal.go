@@ -18,6 +18,7 @@ var (
 	defaultResultDir           = "./pkg/gcal/data/%s"
 	defaultMinDaysWithoutLeave = 3
 	key                        = os.Getenv("GCP_API_KEY")
+	eventsListUrl              = "https://www.googleapis.com/calendar/v3/calendars/%s/events?"
 )
 
 // Events is the structure of the response from the Google Calendar API
@@ -48,41 +49,18 @@ type Suggestion struct {
 func Query(key string, start *string, end *string, calendarID *string) {
 	id := url.QueryEscape(*calendarID)
 	query := fmt.Sprintf("key=%s&timeMin=%s&timeMax=%s", key, *start, *end)
-	url := fmt.Sprintf("https://www.googleapis.com/calendar/v3/calendars/%s/events?"+query, id)
+	url := fmt.Sprintf(eventsListUrl+query, id)
 
 	var events *Events
+	var err error
 	filePath := fmt.Sprintf(defaultResultDir, fmt.Sprintf("%s.%s", *calendarID, "json"))
 
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		fmt.Println("Initiating GET request..")
-
-		f, err := os.Create(filePath)
+		events, err = queryCalendarAPI(events, url, filePath)
 		if err != nil {
 			log.Fatal(err)
 		}
-		defer f.Close()
-
-		resp, err := http.Get(url)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		defer resp.Body.Close()
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		if err := json.Unmarshal(body, &events); err != nil {
-			log.Fatal(err)
-		}
-
-		s, err := json.MarshalIndent(events, "", "    ")
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		f.Write(s)
 	} else {
 		fmt.Println("Skipping GET request..")
 
@@ -240,4 +218,37 @@ func formatFreeTime(holidays, weekends []time.Time) []time.Time {
 	})
 
 	return freeTime
+}
+
+// queryCalendarAPI gets the list of holidays from the Calendar API and writes it into a JSON file
+func queryCalendarAPI(events *Events, url, filePath string) (*Events, error) {
+	f, err := os.Create(filePath)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := json.Unmarshal(body, &events); err != nil {
+		return nil, err
+	}
+
+	s, err := json.MarshalIndent(events, "", "    ")
+	if err != nil {
+		return nil, err
+	}
+
+	f.Write(s)
+
+	return events, nil
 }

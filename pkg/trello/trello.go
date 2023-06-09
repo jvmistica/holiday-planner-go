@@ -23,10 +23,12 @@ var (
 	createListURL     = "https://api.trello.com/1/boards/%s/lists"
 )
 
+// Response is the structure of the Calendar API's response
 type Response struct {
 	ID string `json:"id"`
 }
 
+// CreateBoard creates a board on Trello and returns the board ID
 func CreateBoard(board string) (string, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest(http.MethodPost, createBoardURL, nil)
@@ -65,6 +67,7 @@ func CreateBoard(board string) (string, error) {
 	return response.ID, nil
 }
 
+// CreateList creates a list on Trello and returns the list ID
 func CreateList(board, list, position string) (string, error) {
 	client := &http.Client{}
 	url := fmt.Sprintf(createListURL, board)
@@ -104,6 +107,7 @@ func CreateList(board, list, position string) (string, error) {
 	return response.ID, nil
 }
 
+// CreateCard creates a card on Trello and returns the card ID
 func CreateCard(list, card string) (string, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest(http.MethodPost, createCardURL, nil)
