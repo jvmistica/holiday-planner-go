@@ -20,7 +20,7 @@ var (
 	key                        = os.Getenv("GCP_API_KEY")
 )
 
-// Events is the structure of the response from the calendar API
+// Events is the structure of the response from the Google Calendar API
 type Events struct {
 	Summary       string  `json:"summary,omitempty"`
 	NextSyncToken string  `json:"nextSyncToken,omitempty"`
@@ -36,6 +36,15 @@ type Item struct {
 	} `json:"start,omitempty"`
 }
 
+// Suggestion contains the details of suggested vacation dates
+type Suggestion struct {
+	Vacation string
+	Leaves   string
+	Start    string
+	End      string
+}
+
+// Query
 func Query(key string, start *string, end *string, calendarID *string) {
 	id := url.QueryEscape(*calendarID)
 	query := fmt.Sprintf("key=%s&timeMin=%s&timeMax=%s", key, *start, *end)
@@ -174,13 +183,7 @@ func getVacationsWithoutLeaves(freeTime []time.Time) []map[string]string {
 	return dates
 }
 
-type Suggestion struct {
-	Vacation string
-	Leaves   string
-	Start    string
-	End      string
-}
-
+// getSuggestions returns a list of suggested vacation dates
 func getSuggestions(pairs []map[string]string) ([]*Suggestion, error) {
 	var suggestions []*Suggestion
 	for i, d := range pairs {
@@ -226,6 +229,7 @@ func getSuggestions(pairs []map[string]string) ([]*Suggestion, error) {
 	return suggestions, nil
 }
 
+// formatFreeTime returns a sorted list of holidays and weekends combined
 func formatFreeTime(holidays, weekends []time.Time) []time.Time {
 	var freeTime []time.Time
 	freeTime = append(freeTime, holidays...)
