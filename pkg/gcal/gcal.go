@@ -17,7 +17,7 @@ var (
 	defaultResultDir           = "./pkg/gcal/data/%s"
 	defaultMinDaysWithoutLeave = 3
 	key                        = os.Getenv("GCP_API_KEY")
-	eventsListUrl              = "https://www.googleapis.com/calendar/v3/calendars/%s/events?"
+	eventsListURL              = "https://www.googleapis.com/calendar/v3/calendars/%s/events?"
 )
 
 // Events is the structure of the response from the Google Calendar API
@@ -46,10 +46,6 @@ type Suggestion struct {
 
 // GetCalendarEvents
 func GetCalendarEvents(key, start, end, calendarID string) ([]map[string]string, []*Suggestion, error) {
-	id := url.QueryEscape(calendarID)
-	query := fmt.Sprintf("key=%s&timeMin=%s&timeMax=%s", key, start, end)
-	url := fmt.Sprintf(eventsListUrl+query, id)
-
 	var events *Events
 	filePath := fmt.Sprintf(defaultResultDir, fmt.Sprintf("%s.%s", calendarID, "json")) // change filePath
 
@@ -57,7 +53,7 @@ func GetCalendarEvents(key, start, end, calendarID string) ([]map[string]string,
 		fmt.Println("Initiating GET request..")
 
 		var err error
-		events, err = queryCalendarAPI(events, url, filePath)
+		events, err = queryCalendarAPI(events, key, calendarID, start, end, filePath)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -220,8 +216,8 @@ func formatFreeTime(holidays, weekends []time.Time) []time.Time {
 	})
 
 	var newList []time.Time
-	for k, v := range freeTime[0 : len(freeTime)-1] {
-		if v != freeTime[k+1] {
+	for k, v := range freeTime {
+		if k == len(freeTime)-1 || v != freeTime[k+1] {
 			newList = append(newList, v)
 		}
 	}
@@ -230,7 +226,11 @@ func formatFreeTime(holidays, weekends []time.Time) []time.Time {
 }
 
 // queryCalendarAPI gets the list of holidays from the Calendar API and writes it into a JSON file
-func queryCalendarAPI(events *Events, url, filePath string) (*Events, error) {
+func queryCalendarAPI(events *Events, key, calendarID, start, end, filePath string) (*Events, error) {
+	id := url.QueryEscape(calendarID)
+	query := fmt.Sprintf("key=%s&timeMin=%s&timeMax=%s", key, start, end)
+	url := fmt.Sprintf(eventsListURL+query, id)
+
 	f, err := os.Create(filePath)
 	if err != nil {
 		return nil, err

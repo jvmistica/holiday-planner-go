@@ -2,6 +2,9 @@ package gcal
 
 import (
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"os"
 	"testing"
 	"time"
 
@@ -116,5 +119,148 @@ func TestGetSuggestions(t *testing.T) {
 		assert.Equal(t, "1", result[1].Leaves)
 		assert.Equal(t, "2023-05-24T00:00:00Z", result[1].Start)
 		assert.Equal(t, "2023-05-28T00:00:00Z", result[1].End)
+	})
+}
+
+func TestFormatFreeTime(t *testing.T) {
+	holidays := `["2023-12-25T00:00:00Z", "2023-12-26T00:00:00Z", "2023-12-21T00:00:00Z", "2024-01-01T00:00:00Z"]`
+	weekends := `["2023-12-23T00:00:00Z", "2023-12-24T00:00:00Z", "2023-12-30T00:00:00Z", "2023-12-31T00:00:00Z"]`
+
+	var h []time.Time
+	err := json.Unmarshal([]byte(holidays), &h)
+	assert.Nil(t, err)
+
+	var w []time.Time
+	err = json.Unmarshal([]byte(weekends), &w)
+	assert.Nil(t, err)
+
+	result := formatFreeTime(h, w)
+	assert.Equal(t, 8, len(result))
+	assert.Equal(t, "2023-12-21T00:00:00Z", result[0].Format(defaultTimeFormat))
+	assert.Equal(t, "2024-01-01T00:00:00Z", result[7].Format(defaultTimeFormat))
+}
+
+func TestQueryCalendarAPI(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{
+			"summary": "Holidays in Austria",
+			"nextSyncToken": "CMDu0emHs_8CEAAYASCn_tSAAg==",
+			"items": [{
+				"summary": "Assumption of Mary",
+				"description": "Public holiday",
+				"start": {
+				    "date": "2023-08-15"
+				}
+			},
+			{
+				"summary": "Yom Kippur",
+				"description": "Observance\nTo hide observances, go to Google Calendar Settings \u003e Holidays in Austria",
+				"start": {
+					"date": "2023-09-25"
+				}
+			}]}`))
+	}))
+	defer ts.Close()
+
+	ts.URL = ts.URL + "/%s?" + "key=abc&timeMin=2023-08-01T00:00:00Z&timeMax=2023-09-30T00:00:00Z"
+	origURL := eventsListURL
+	eventsListURL = ts.URL
+	defer func() {
+		eventsListURL = origURL
+	}()
+
+	var events *Events
+	events, err := queryCalendarAPI(events, "abc", "test", "2023-08-01T00:00:00Z", "2023-09-30T00:00:00Z", t.TempDir()+"test.json")
+	assert.Nil(t, err)
+	assert.Equal(t, "Holidays in Austria", events.Summary)
+	assert.Equal(t, "Assumption of Mary", events.Items[0].Summary)
+	assert.Equal(t, "Yom Kippur", events.Items[1].Summary)
+}
+
+func TestGetCalendarEvents(t *testing.T) {
+	t.Run("file does not exist", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		origDir := defaultResultDir
+		defaultResultDir = tmpDir + "/%s"
+		defer func() {
+			defaultResultDir = origDir
+		}()
+
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(`{
+				"summary": "Holidays in Austria",
+				"nextSyncToken": "CMDu0emHs_8CEAAYASCn_tSAAg==",
+				"items": [{
+					"summary": "Assumption of Mary",
+					"description": "Public holiday",
+					"start": {
+					    "date": "2023-08-15"
+					}
+				},
+				{
+					"summary": "Yom Kippur",
+					"description": "Observance\nTo hide observances, go to Google Calendar Settings \u003e Holidays in Austria",
+					"start": {
+						"date": "2023-09-25"
+					}
+				}]}`))
+		}))
+		defer ts.Close()
+
+		ts.URL = ts.URL + "/%s?" + "key=abc&timeMin=2023-08-01T00:00:00Z&timeMax=2023-09-30T00:00:00Z"
+		origURL := eventsListURL
+		eventsListURL = ts.URL
+		defer func() {
+			eventsListURL = origURL
+		}()
+
+		v, s, err := GetCalendarEvents("abc", "2023-08-01T00:00:00Z", "2023-09-30T00:00:00Z", "test")
+		assert.Nil(t, err)
+		assert.Equal(t, 1, len(v))
+		assert.Equal(t, "3", v[0]["count"])
+		assert.Equal(t, "2023-09-23T00:00:00Z", v[0]["start"])
+		assert.Equal(t, "2023-09-25T00:00:00Z", v[0]["end"])
+		assert.Nil(t, s)
+	})
+
+	t.Run("file exists", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		origDir := defaultResultDir
+		defaultResultDir = tmpDir + "/%s"
+		defer func() {
+			defaultResultDir = origDir
+		}()
+
+		f, err := os.Create(tmpDir + "/test.json")
+		assert.Nil(t, err)
+		defer f.Close()
+
+		f.Write([]byte(`{
+			"summary": "Holidays in Austria",
+			"nextSyncToken": "CMDu0emHs_8CEAAYASCn_tSAAg==",
+			"items": [{
+				"summary": "Assumption of Mary",
+				"description": "Public holiday",
+				"start": {
+				    "date": "2023-08-15"
+				}
+			},
+			{
+				"summary": "Yom Kippur",
+				"description": "Observance\nTo hide observances, go to Google Calendar Settings \u003e Holidays in Austria",
+				"start": {
+					"date": "2023-09-25"
+				}
+			}]}`))
+
+		v, s, err := GetCalendarEvents("abc", "2023-08-01T00:00:00Z", "2023-09-30T00:00:00Z", "test")
+		assert.Nil(t, err)
+		assert.Equal(t, 1, len(v))
+		assert.Equal(t, "3", v[0]["count"])
+		assert.Equal(t, "2023-09-23T00:00:00Z", v[0]["start"])
+		assert.Equal(t, "2023-09-25T00:00:00Z", v[0]["end"])
+		assert.Nil(t, s)
 	})
 }

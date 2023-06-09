@@ -1,40 +1,103 @@
 {
     "summary": "Holidays in Austria",
-    "nextSyncToken": "CMCPpYjgpv8CEAAYASCwlun_AQ==",
+    "nextSyncToken": "CMDu0emHs_8CEAAYASCn_tSAAg==",
     "items": [
         {
-            "summary": "Labor Day / May Day",
+            "summary": "Assumption of Mary",
             "description": "Public holiday",
             "start": {
-                "date": "2023-05-01"
+                "date": "2023-08-15"
             }
         },
         {
-            "summary": "Mother's Day",
+            "summary": "Yom Kippur",
             "description": "Observance\nTo hide observances, go to Google Calendar Settings \u003e Holidays in Austria",
             "start": {
-                "date": "2023-05-14"
+                "date": "2023-09-25"
             }
         },
         {
-            "summary": "Ascension Day",
+            "summary": "National Day",
             "description": "Public holiday",
             "start": {
-                "date": "2023-05-18"
+                "date": "2023-10-26"
             }
         },
         {
-            "summary": "Whit Sunday",
+            "summary": "Daylight Saving Time ends",
             "description": "Observance\nTo hide observances, go to Google Calendar Settings \u003e Holidays in Austria",
             "start": {
-                "date": "2023-05-28"
+                "date": "2023-10-29"
             }
         },
         {
-            "summary": "Whit Monday",
+            "summary": "Reformation Day",
+            "description": "Observance\nTo hide observances, go to Google Calendar Settings \u003e Holidays in Austria",
+            "start": {
+                "date": "2023-10-31"
+            }
+        },
+        {
+            "summary": "All Saints' Day",
             "description": "Public holiday",
             "start": {
-                "date": "2023-05-29"
+                "date": "2023-11-01"
+            }
+        },
+        {
+            "summary": "All Souls' Day",
+            "description": "Observance\nTo hide observances, go to Google Calendar Settings \u003e Holidays in Austria",
+            "start": {
+                "date": "2023-11-02"
+            }
+        },
+        {
+            "summary": "First Advent Sunday",
+            "description": "Observance\nTo hide observances, go to Google Calendar Settings \u003e Holidays in Austria",
+            "start": {
+                "date": "2023-12-03"
+            }
+        },
+        {
+            "summary": "Immaculate Conception",
+            "description": "Public holiday",
+            "start": {
+                "date": "2023-12-08"
+            }
+        },
+        {
+            "summary": "Christmas Day",
+            "description": "Public holiday",
+            "start": {
+                "date": "2023-12-25"
+            }
+        },
+        {
+            "summary": "St. Stephen's Day",
+            "description": "Public holiday",
+            "start": {
+                "date": "2023-12-26"
+            }
+        },
+        {
+            "summary": "New Year's Eve",
+            "description": "Observance\nTo hide observances, go to Google Calendar Settings \u003e Holidays in Austria",
+            "start": {
+                "date": "2023-12-31"
+            }
+        },
+        {
+            "summary": "New Year's Day",
+            "description": "Public holiday",
+            "start": {
+                "date": "2024-01-01"
+            }
+        },
+        {
+            "summary": "Epiphany",
+            "description": "Public holiday",
+            "start": {
+                "date": "2024-01-06"
             }
         }
     ]
