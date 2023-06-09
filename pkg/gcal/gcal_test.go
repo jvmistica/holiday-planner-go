@@ -58,7 +58,7 @@ func TestGetWeekends(t *testing.T) {
 }
 
 func TestGetVacationsWithoutLeaves(t *testing.T) {
-	dates := `["2023-05-28T00:00:00Z", "2023-05-29T00:00:00Z", "2023-05-27T00:00:00Z", "2023-05-28T00:00:00Z"]`
+	dates := `["2023-05-15T00:00:00Z", "2023-05-27T00:00:00Z", "2023-05-28T00:00:00Z", "2023-05-29T00:00:00Z"]`
 
 	var free []time.Time
 	err := json.Unmarshal([]byte(dates), &free)
@@ -83,7 +83,7 @@ func TestGetSuggestions(t *testing.T) {
 	})
 
 	t.Run("two pairs", func(t *testing.T) {
-		dates := `[{"start": "2023-05-24T00:00:00Z", "end": "2023-05-25T00:00:00Z"}, {"start": "2023-05-27T00:00:00Z", "end": "2023-05-28T00:00:00Z"}]`
+		dates := `[{"start": "2023-12-23T00:00:00Z", "end": "2023-12-26T00:00:00Z"}, {"start": "2023-12-30T00:00:00Z", "end": "2024-01-01T00:00:00Z"}]`
 
 		var free []map[string]string
 		err := json.Unmarshal([]byte(dates), &free)
@@ -92,10 +92,10 @@ func TestGetSuggestions(t *testing.T) {
 		result, err := getSuggestions(free)
 		assert.Nil(t, err)
 		assert.Equal(t, 1, len(result))
-		assert.Equal(t, "5", result[0].Vacation)
-		assert.Equal(t, "1", result[0].Leaves)
-		assert.Equal(t, "2023-05-24T00:00:00Z", result[0].Start)
-		assert.Equal(t, "2023-05-28T00:00:00Z", result[0].End)
+		assert.Equal(t, "10", result[0].Vacation)
+		assert.Equal(t, "3", result[0].Leaves)
+		assert.Equal(t, "2023-12-23T00:00:00Z", result[0].Start)
+		assert.Equal(t, "2024-01-01T00:00:00Z", result[0].End)
 	})
 
 	t.Run("three pairs", func(t *testing.T) {
