@@ -59,7 +59,7 @@ func TestCreateList(t *testing.T) {
 			createListURL = origURL
 		}()
 
-		result, err := CreateList(defaultBoardName, "sample list unauthorized", "1")
+		result, err := CreateList("abc123a36eaf8d75e160000f", "sample list unauthorized", "1")
 		assert.Equal(t, "", result)
 		assert.Equal(t, "failed to create list - status code: 401", err.Error())
 	})
@@ -78,7 +78,7 @@ func TestCreateList(t *testing.T) {
 			createListURL = origURL
 		}()
 
-		result, err := CreateList(defaultBoardName, "sample list", "1")
+		result, err := CreateList("abc123a36eaf8d75e160000f", "sample list", "1")
 		assert.Equal(t, "abc123a36ech8d75e160000f", result)
 		assert.Nil(t, err)
 	})
@@ -97,7 +97,7 @@ func TestCreateCard(t *testing.T) {
 			createCardURL = origURL
 		}()
 
-		result, err := CreateCard("sample list", "sample card unauthorized")
+		result, err := CreateCard("abc123a36ech8d75e160000f", "sample card unauthorized")
 		assert.Equal(t, "", result)
 		assert.Equal(t, "failed to create card - status code: 401", err.Error())
 	})
@@ -115,7 +115,7 @@ func TestCreateCard(t *testing.T) {
 			createCardURL = origURL
 		}()
 
-		result, err := CreateCard("sample list", "sample card")
+		result, err := CreateCard("abc123a36ech8d75e160000f", "sample card")
 		assert.Equal(t, "abc123a36eaf8d78u160000f", result)
 		assert.Nil(t, err)
 	})
