@@ -86,7 +86,7 @@ func CreateList(board, list, position string) (string, error) {
 	}
 
 	if res.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("failed to create board - status code: %d", res.StatusCode)
+		return "", fmt.Errorf("failed to create list - status code: %d", res.StatusCode)
 	}
 
 	defer res.Body.Close()
@@ -124,7 +124,7 @@ func CreateCard(list, card string) (string, error) {
 	}
 
 	if res.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("failed to create board - status code: %d", res.StatusCode)
+		return "", fmt.Errorf("failed to create card - status code: %d", res.StatusCode)
 	}
 
 	defer res.Body.Close()

@@ -9,7 +9,7 @@ import (
 )
 
 func TestCreateBoard(t *testing.T) {
-	t.Run("error - unauthorized", func(t *testing.T) {
+	t.Run("error - unauthorized board creation", func(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusUnauthorized)
 		}))
@@ -46,7 +46,7 @@ func TestCreateBoard(t *testing.T) {
 }
 
 func TestCreateList(t *testing.T) {
-	t.Run("error - unauthorized", func(t *testing.T) {
+	t.Run("error - unauthorized list creation", func(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusUnauthorized)
 		}))
@@ -59,9 +59,9 @@ func TestCreateList(t *testing.T) {
 			createListURL = origURL
 		}()
 
-		result, err := CreateList(defaultBoardName, "sample list", "1")
+		result, err := CreateList(defaultBoardName, "sample list unauthorized", "1")
 		assert.Equal(t, "", result)
-		assert.Equal(t, "failed to create board - status code: 401", err.Error())
+		assert.Equal(t, "failed to create list - status code: 401", err.Error())
 	})
 
 	t.Run("successful", func(t *testing.T) {
@@ -85,7 +85,7 @@ func TestCreateList(t *testing.T) {
 }
 
 func TestCreateCard(t *testing.T) {
-	t.Run("error - unauthorized", func(t *testing.T) {
+	t.Run("error - unauthorized card creation", func(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusUnauthorized)
 		}))
@@ -97,9 +97,9 @@ func TestCreateCard(t *testing.T) {
 			createCardURL = origURL
 		}()
 
-		result, err := CreateCard("sample list", "sample card")
+		result, err := CreateCard("sample list", "sample card unauthorized")
 		assert.Equal(t, "", result)
-		assert.Equal(t, "failed to create board - status code: 401", err.Error())
+		assert.Equal(t, "failed to create card - status code: 401", err.Error())
 	})
 
 	t.Run("successful", func(t *testing.T) {
