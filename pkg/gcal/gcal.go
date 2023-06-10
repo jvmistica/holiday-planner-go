@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -18,7 +17,7 @@ var (
 	defaultResultDir           = "./pkg/gcal/data/%s"
 	defaultMinDaysWithoutLeave = 3
 	key                        = os.Getenv("GCP_API_KEY")
-	eventsListUrl              = "https://www.googleapis.com/calendar/v3/calendars/%s/events?"
+	eventsListURL              = "https://www.googleapis.com/calendar/v3/calendars/%s/events?"
 )
 
 // Events is the structure of the response from the Google Calendar API
@@ -39,55 +38,60 @@ type Item struct {
 
 // Suggestion contains the details of suggested vacation dates
 type Suggestion struct {
-	Vacation string
-	Leaves   string
-	Start    string
-	End      string
+	Vacation int
+	Leaves   int
+	Start    time.Time
+	End      time.Time
 }
 
-// Query
-func Query(key string, start *string, end *string, calendarID *string) {
-	id := url.QueryEscape(*calendarID)
-	query := fmt.Sprintf("key=%s&timeMin=%s&timeMax=%s", key, *start, *end)
-	url := fmt.Sprintf(eventsListUrl+query, id)
+// Vacation contains the details of vacation dates (long weekends, etc.)
+type Vacation struct {
+	Start time.Time
+	End   time.Time
+	Count int
+}
 
+// GetCalendarEvents
+func GetCalendarEvents(key, start, end, calendarID string) ([]*Vacation, []*Suggestion, error) {
 	var events *Events
-	var err error
-	filePath := fmt.Sprintf(defaultResultDir, fmt.Sprintf("%s.%s", *calendarID, "json"))
+	filePath := fmt.Sprintf(defaultResultDir, fmt.Sprintf("%s.%s", calendarID, "json")) // change filePath
 
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		fmt.Println("Initiating GET request..")
-		events, err = queryCalendarAPI(events, url, filePath)
+
+		var err error
+		events, err = queryCalendarAPI(events, key, calendarID, start, end, filePath)
 		if err != nil {
-			log.Fatal(err)
+			return nil, nil, err
 		}
 	} else {
 		fmt.Println("Skipping GET request..")
 
 		data, err := os.ReadFile(filePath)
 		if err != nil {
-			log.Fatal(err)
+			return nil, nil, err
 		}
 
 		if err := json.Unmarshal(data, &events); err != nil {
-			log.Fatal(err)
+			return nil, nil, err
 		}
 	}
 
 	holidays, err := getHolidays(events)
 	if err != nil {
-		log.Fatal(err)
+		return nil, nil, err
 	}
 
-	weekends, err := getWeekends(*start, *end)
+	weekends, err := getWeekends(start, end)
 	if err != nil {
-		log.Fatal(err)
+		return nil, nil, err
 	}
 
 	freeTime := formatFreeTime(holidays, weekends)
 	vacationWithoutLeaves := getVacationsWithoutLeaves(freeTime)
-	s, _ := json.MarshalIndent(vacationWithoutLeaves, "", "    ")
-	fmt.Println(string(s))
+	suggestions := getSuggestions(vacationWithoutLeaves)
+
+	return vacationWithoutLeaves, suggestions, nil
 }
 
 // getHolidays returns a map of holidays and their date
@@ -128,83 +132,65 @@ func getWeekends(startDate, endDate string) ([]time.Time, error) {
 
 // getVacationsWithoutLeaves returns free time of 3 (default) or more days where filing a vacation leave
 // is not needed (i.e. long weekends)
-func getVacationsWithoutLeaves(freeTime []time.Time) []map[string]string {
+func getVacationsWithoutLeaves(freeTime []time.Time) []*Vacation {
 	var toDate time.Time
 	days := 0
 	fromDate := freeTime[0]
-	dates := []map[string]string{}
-	for _, v := range freeTime {
+	var dates []*Vacation
+	i := 0
+
+	for i < len(freeTime) {
+		if days == 0 {
+			fromDate = freeTime[i]
+		}
+
 		days += 1
-		if days == 1 {
-			fromDate = v
-		}
-
-		for _, d := range freeTime {
-			if v.AddDate(0, 0, 1) == d {
-				days += 1
-				toDate = d
-				v = d
+		if i == len(freeTime)-1 || freeTime[i].AddDate(0, 0, 1) != freeTime[i+1] {
+			toDate = freeTime[i]
+			if days >= defaultMinDaysWithoutLeave {
+				date := &Vacation{
+					Start: fromDate,
+					End:   toDate,
+					Count: days,
+				}
+				dates = append(dates, date)
 			}
+			days = 0
 		}
-
-		if days >= defaultMinDaysWithoutLeave {
-			date := make(map[string]string)
-			date["start"] = fromDate.String()
-			date["end"] = toDate.String()
-			date["count"] = fmt.Sprint(days)
-			dates = append(dates, date)
-		}
-		days = 0
-
+		i += 1
 	}
 
 	return dates
 }
 
 // getSuggestions returns a list of suggested vacation dates
-func getSuggestions(pairs []map[string]string) ([]*Suggestion, error) {
+func getSuggestions(pairs []*Vacation) []*Suggestion {
 	var suggestions []*Suggestion
 	for i, d := range pairs {
 		if i >= len(pairs)-1 {
 			continue
 		}
 
-		start, err := time.Parse(defaultTimeFormat, d["start"])
-		if err != nil {
-			return nil, err
-		}
-
-		end, err := time.Parse(defaultTimeFormat, d["end"])
-		if err != nil {
-			return nil, err
-		}
-
-		nextStart, err := time.Parse(defaultTimeFormat, pairs[i+1]["start"])
-		if err != nil {
-			return nil, err
-		}
-
-		nextEnd, err := time.Parse(defaultTimeFormat, pairs[i+1]["end"])
-		if err != nil {
-			return nil, err
-		}
-
-		leaves := nextStart.Sub(end).Hours() / 24
+		start := d.Start
+		end := d.End
+		nextStart := pairs[i+1].Start
+		nextEnd := pairs[i+1].End
+		leaves := int((nextStart.Sub(end).Hours() / 24) - 1)
 		if leaves <= 5 {
-			vacation := (end.Sub(start).Hours() / 24) + (nextEnd.Sub(nextStart).Hours() / 24) + leaves
+			vacation := int(nextEnd.Sub(start).Hours() / 24)
 			if vacation-leaves > 1 {
 				suggestions = append(suggestions,
 					&Suggestion{
-						Vacation: fmt.Sprint(vacation + 1),
-						Leaves:   fmt.Sprint(leaves - 1),
-						Start:    d["start"],
-						End:      pairs[i+1]["end"],
+						Vacation: vacation + 1,
+						Leaves:   leaves,
+						Start:    d.Start,
+						End:      pairs[i+1].End,
 					})
 			}
 		}
 	}
 
-	return suggestions, nil
+	return suggestions
 }
 
 // formatFreeTime returns a sorted list of holidays and weekends combined
@@ -217,11 +203,22 @@ func formatFreeTime(holidays, weekends []time.Time) []time.Time {
 		return freeTime[i].Before(freeTime[j])
 	})
 
-	return freeTime
+	var newList []time.Time
+	for k, v := range freeTime {
+		if k == len(freeTime)-1 || v != freeTime[k+1] {
+			newList = append(newList, v)
+		}
+	}
+
+	return newList
 }
 
 // queryCalendarAPI gets the list of holidays from the Calendar API and writes it into a JSON file
-func queryCalendarAPI(events *Events, url, filePath string) (*Events, error) {
+func queryCalendarAPI(events *Events, key, calendarID, start, end, filePath string) (*Events, error) {
+	id := url.QueryEscape(calendarID)
+	query := fmt.Sprintf("key=%s&timeMin=%s&timeMax=%s", key, start, end)
+	url := fmt.Sprintf(eventsListURL+query, id)
+
 	f, err := os.Create(filePath)
 	if err != nil {
 		return nil, err
@@ -231,6 +228,10 @@ func queryCalendarAPI(events *Events, url, filePath string) (*Events, error) {
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unsuccessful - status code: %d", resp.StatusCode)
 	}
 
 	defer resp.Body.Close()
