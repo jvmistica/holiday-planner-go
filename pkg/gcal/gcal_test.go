@@ -120,8 +120,7 @@ func TestGetSuggestions(t *testing.T) {
 		err := json.Unmarshal([]byte(dates), &free)
 		assert.Nil(t, err)
 
-		result, err := getSuggestions(free)
-		assert.Nil(t, err)
+		result := getSuggestions(free)
 		assert.Nil(t, result)
 	})
 
@@ -132,8 +131,7 @@ func TestGetSuggestions(t *testing.T) {
 		err := json.Unmarshal([]byte(dates), &free)
 		assert.Nil(t, err)
 
-		result, err := getSuggestions(free)
-		assert.Nil(t, err)
+		result := getSuggestions(free)
 		assert.Equal(t, 1, len(result))
 		assert.Equal(t, 10, result[0].Vacation)
 		assert.Equal(t, 3, result[0].Leaves)
@@ -148,8 +146,7 @@ func TestGetSuggestions(t *testing.T) {
 		err := json.Unmarshal([]byte(dates), &free)
 		assert.Nil(t, err)
 
-		result, err := getSuggestions(free)
-		assert.Nil(t, err)
+		result := getSuggestions(free)
 		assert.Equal(t, 2, len(result))
 		assert.Equal(t, 4, result[0].Vacation)
 		assert.Equal(t, 0, result[0].Leaves)
@@ -346,4 +343,89 @@ func TestGetCalendarEvents(t *testing.T) {
 		assert.Nil(t, s)
 	})
 
+	t.Run("error reading JSON file", func(t *testing.T) {
+		tmpDir := "/not/exist"
+		origDir := defaultResultDir
+		defaultResultDir = tmpDir + "/%s"
+		defer func() {
+			defaultResultDir = origDir
+		}()
+
+		v, s, err := GetCalendarEvents("abc", "2023-08-01T00:00:00Z", "2023-09-30T00:00:00Z", "test")
+		assert.NotNil(t, err)
+		assert.Nil(t, v)
+		assert.Nil(t, s)
+	})
+
+	t.Run("error parsing date while getting holidays", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		origDir := defaultResultDir
+		defaultResultDir = tmpDir + "/%s"
+		defer func() {
+			defaultResultDir = origDir
+		}()
+
+		f, err := os.Create(tmpDir + "/test.json")
+		assert.Nil(t, err)
+		defer f.Close()
+
+		f.Write([]byte(`{
+			"summary": "Holidays in Austria",
+			"nextSyncToken": "CMDu0emHs_8CEAAYASCn_tSAAg==",
+			"items": [{
+				"summary": "Assumption of Mary",
+				"description": "Public holiday",
+				"start": {
+				    "date": "2023/08/15"
+				}
+			},
+			{
+				"summary": "Yom Kippur",
+				"description": "Observance\nTo hide observances, go to Google Calendar Settings \u003e Holidays in Austria",
+				"start": {
+					"date": "2023/09/25"
+				}
+			}]}`))
+
+		v, s, err := GetCalendarEvents("abc", "2023-08-01T00:00:00Z", "2023-09-30T00:00:00Z", "test")
+		assert.NotNil(t, err)
+		assert.Nil(t, v)
+		assert.Nil(t, s)
+	})
+
+	t.Run("error parsing date while getting weekends", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		origDir := defaultResultDir
+		defaultResultDir = tmpDir + "/%s"
+		defer func() {
+			defaultResultDir = origDir
+		}()
+
+		f, err := os.Create(tmpDir + "/test.json")
+		assert.Nil(t, err)
+		defer f.Close()
+
+		f.Write([]byte(`{
+			"summary": "Holidays in Austria",
+			"nextSyncToken": "CMDu0emHs_8CEAAYASCn_tSAAg==",
+			"items": [{
+				"summary": "Assumption of Mary",
+				"description": "Public holiday",
+				"start": {
+				    "date": "2023-08-15"
+				}
+			},
+			{
+				"summary": "Yom Kippur",
+				"description": "Observance\nTo hide observances, go to Google Calendar Settings \u003e Holidays in Austria",
+				"start": {
+					"date": "2023-09-25"
+				}
+			}]}`))
+
+		v, s, err := GetCalendarEvents("abc", "2023/08/01T00:00:00Z", "2023/09/30T00:00:00Z", "test")
+		assert.NotNil(t, err)
+		assert.Nil(t, v)
+		assert.Nil(t, s)
+	})
 }

@@ -89,11 +89,7 @@ func GetCalendarEvents(key, start, end, calendarID string) ([]*Vacation, []*Sugg
 
 	freeTime := formatFreeTime(holidays, weekends)
 	vacationWithoutLeaves := getVacationsWithoutLeaves(freeTime)
-
-	suggestions, err := getSuggestions(vacationWithoutLeaves)
-	if err != nil {
-		return nil, nil, err
-	}
+	suggestions := getSuggestions(vacationWithoutLeaves)
 
 	return vacationWithoutLeaves, suggestions, nil
 }
@@ -168,7 +164,7 @@ func getVacationsWithoutLeaves(freeTime []time.Time) []*Vacation {
 }
 
 // getSuggestions returns a list of suggested vacation dates
-func getSuggestions(pairs []*Vacation) ([]*Suggestion, error) {
+func getSuggestions(pairs []*Vacation) []*Suggestion {
 	var suggestions []*Suggestion
 	for i, d := range pairs {
 		if i >= len(pairs)-1 {
@@ -194,7 +190,7 @@ func getSuggestions(pairs []*Vacation) ([]*Suggestion, error) {
 		}
 	}
 
-	return suggestions, nil
+	return suggestions
 }
 
 // formatFreeTime returns a sorted list of holidays and weekends combined
