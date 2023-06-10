@@ -11,6 +11,18 @@ import (
 func TestCreateBoard(t *testing.T) {
 	t.Run("invalid URL", func(t *testing.T) {
 		origURL := createBoardURL
+		createBoardURL = "testInvalidURL%s"
+		defer func() {
+			createBoardURL = origURL
+		}()
+
+		result, err := CreateBoard(defaultBoardName)
+		assert.Equal(t, "", result)
+		assert.NotNil(t, err.Error())
+	})
+
+	t.Run("unsupported protocol", func(t *testing.T) {
+		origURL := createBoardURL
 		createBoardURL = "testInvalidURL"
 		defer func() {
 			createBoardURL = origURL
@@ -87,6 +99,18 @@ func TestCreateList(t *testing.T) {
 		assert.NotNil(t, err.Error())
 	})
 
+	t.Run("unsupported protocol", func(t *testing.T) {
+		origURL := createListURL
+		createListURL = "testInvalidURL%s"
+		defer func() {
+			createListURL = origURL
+		}()
+
+		result, err := CreateList("abc123a36eaf8d75e160000f", "sample list unauthorized", "1")
+		assert.Equal(t, "", result)
+		assert.NotNil(t, err.Error())
+	})
+
 	t.Run("empty response", func(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
@@ -145,6 +169,18 @@ func TestCreateList(t *testing.T) {
 
 func TestCreateCard(t *testing.T) {
 	t.Run("invalid URL", func(t *testing.T) {
+		origURL := createCardURL
+		createCardURL = "testInvalidURL%s"
+		defer func() {
+			createCardURL = origURL
+		}()
+
+		result, err := CreateCard("abc123a36ech8d75e160000f", "sample card unauthorized")
+		assert.Equal(t, "", result)
+		assert.NotNil(t, err.Error())
+	})
+
+	t.Run("unsupported protocol", func(t *testing.T) {
 		origURL := createCardURL
 		createCardURL = "testInvalidURL"
 		defer func() {

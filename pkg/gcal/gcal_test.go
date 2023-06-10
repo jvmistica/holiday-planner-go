@@ -204,6 +204,26 @@ func TestQueryCalendarAPI(t *testing.T) {
 		assert.Nil(t, events)
 	})
 
+	t.Run("error parsing JSON response", func(t *testing.T) {
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(`invalid`))
+		}))
+		defer ts.Close()
+
+		ts.URL = ts.URL + "/%s?" + "key=abc&timeMin=2023-08-01T00:00:00Z&timeMax=2023-09-30T00:00:00Z"
+		origURL := eventsListURL
+		eventsListURL = ts.URL
+		defer func() {
+			eventsListURL = origURL
+		}()
+
+		var events *Events
+		events, err := queryCalendarAPI(events, "abc", "test", "2023-08-01T00:00:00Z", "2023-09-30T00:00:00Z", t.TempDir()+"test.json")
+		assert.NotNil(t, err)
+		assert.Nil(t, events)
+	})
+
 	t.Run("successful", func(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
@@ -329,13 +349,19 @@ func TestGetCalendarEvents(t *testing.T) {
 		assert.Nil(t, s)
 	})
 
-	t.Run("error querying calendar API", func(t *testing.T) {
-		tmpDir := "/not/exist"
+	t.Run("error parsing JSON file", func(t *testing.T) {
+		tmpDir := t.TempDir()
 		origDir := defaultResultDir
 		defaultResultDir = tmpDir + "/%s"
 		defer func() {
 			defaultResultDir = origDir
 		}()
+
+		f, err := os.Create(tmpDir + "/test.json")
+		assert.Nil(t, err)
+		defer f.Close()
+
+		f.Write([]byte(`invalid`))
 
 		v, s, err := GetCalendarEvents("abc", "2023-08-01T00:00:00Z", "2023-09-30T00:00:00Z", "test")
 		assert.NotNil(t, err)
@@ -343,7 +369,7 @@ func TestGetCalendarEvents(t *testing.T) {
 		assert.Nil(t, s)
 	})
 
-	t.Run("error reading JSON file", func(t *testing.T) {
+	t.Run("error querying calendar API", func(t *testing.T) {
 		tmpDir := "/not/exist"
 		origDir := defaultResultDir
 		defaultResultDir = tmpDir + "/%s"
