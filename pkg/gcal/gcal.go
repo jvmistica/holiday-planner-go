@@ -38,14 +38,21 @@ type Item struct {
 
 // Suggestion contains the details of suggested vacation dates
 type Suggestion struct {
-	Vacation string
-	Leaves   string
-	Start    string
-	End      string
+	Vacation int
+	Leaves   int
+	Start    time.Time
+	End      time.Time
+}
+
+// Vacation contains the details of vacation dates (long weekends, etc.)
+type Vacation struct {
+	Start time.Time
+	End   time.Time
+	Count int
 }
 
 // GetCalendarEvents
-func GetCalendarEvents(key, start, end, calendarID string) ([]map[string]string, []*Suggestion, error) {
+func GetCalendarEvents(key, start, end, calendarID string) ([]*Vacation, []*Suggestion, error) {
 	var events *Events
 	filePath := fmt.Sprintf(defaultResultDir, fmt.Sprintf("%s.%s", calendarID, "json")) // change filePath
 
@@ -129,11 +136,11 @@ func getWeekends(startDate, endDate string) ([]time.Time, error) {
 
 // getVacationsWithoutLeaves returns free time of 3 (default) or more days where filing a vacation leave
 // is not needed (i.e. long weekends)
-func getVacationsWithoutLeaves(freeTime []time.Time) []map[string]string {
+func getVacationsWithoutLeaves(freeTime []time.Time) []*Vacation {
 	var toDate time.Time
 	days := 0
 	fromDate := freeTime[0]
-	dates := []map[string]string{}
+	var dates []*Vacation
 	i := 0
 
 	for i < len(freeTime) {
@@ -145,10 +152,11 @@ func getVacationsWithoutLeaves(freeTime []time.Time) []map[string]string {
 		if i == len(freeTime)-1 || freeTime[i].AddDate(0, 0, 1) != freeTime[i+1] {
 			toDate = freeTime[i]
 			if days >= defaultMinDaysWithoutLeave {
-				date := make(map[string]string)
-				date["start"] = fromDate.Format(defaultTimeFormat)
-				date["end"] = toDate.Format(defaultTimeFormat)
-				date["count"] = fmt.Sprint(days)
+				date := &Vacation{
+					Start: fromDate,
+					End:   toDate,
+					Count: days,
+				}
 				dates = append(dates, date)
 			}
 			days = 0
@@ -160,43 +168,27 @@ func getVacationsWithoutLeaves(freeTime []time.Time) []map[string]string {
 }
 
 // getSuggestions returns a list of suggested vacation dates
-func getSuggestions(pairs []map[string]string) ([]*Suggestion, error) {
+func getSuggestions(pairs []*Vacation) ([]*Suggestion, error) {
 	var suggestions []*Suggestion
 	for i, d := range pairs {
 		if i >= len(pairs)-1 {
 			continue
 		}
 
-		start, err := time.Parse(defaultTimeFormat, d["start"])
-		if err != nil {
-			return nil, err
-		}
-
-		end, err := time.Parse(defaultTimeFormat, d["end"])
-		if err != nil {
-			return nil, err
-		}
-
-		nextStart, err := time.Parse(defaultTimeFormat, pairs[i+1]["start"])
-		if err != nil {
-			return nil, err
-		}
-
-		nextEnd, err := time.Parse(defaultTimeFormat, pairs[i+1]["end"])
-		if err != nil {
-			return nil, err
-		}
-
-		leaves := (nextStart.Sub(end).Hours() / 24) - 1
+		start := d.Start
+		end := d.End
+		nextStart := pairs[i+1].Start
+		nextEnd := pairs[i+1].End
+		leaves := int((nextStart.Sub(end).Hours() / 24) - 1)
 		if leaves <= 5 {
-			vacation := nextEnd.Sub(start).Hours() / 24
+			vacation := int(nextEnd.Sub(start).Hours() / 24)
 			if vacation-leaves > 1 {
 				suggestions = append(suggestions,
 					&Suggestion{
-						Vacation: fmt.Sprint(vacation + 1),
-						Leaves:   fmt.Sprint(leaves),
-						Start:    d["start"],
-						End:      pairs[i+1]["end"],
+						Vacation: vacation + 1,
+						Leaves:   leaves,
+						Start:    d.Start,
+						End:      pairs[i+1].End,
 					})
 			}
 		}
@@ -240,6 +232,10 @@ func queryCalendarAPI(events *Events, key, calendarID, start, end, filePath stri
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unsuccessful - status code: %d", resp.StatusCode)
 	}
 
 	defer resp.Body.Close()
