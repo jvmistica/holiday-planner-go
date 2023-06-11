@@ -13,7 +13,7 @@ import (
 
 var (
 	defaultCalendarID          = "en.austrian#holiday@group.v.calendar.google.com"
-	defaultTimeFormat          = "2006-01-02T00:00:00Z"
+	defaultTimeFormat          = "2006-01-02"
 	defaultResultDir           = "./pkg/gcal/data/%s"
 	defaultMinDaysWithoutLeave = 3
 	key                        = os.Getenv("GCP_API_KEY")
@@ -98,7 +98,7 @@ func GetCalendarEvents(key, start, end, calendarID string) ([]*Vacation, []*Sugg
 func getHolidays(events *Events) ([]time.Time, error) {
 	var holidays []time.Time
 	for _, item := range events.Items {
-		start, err := time.Parse("2006-01-02", item.Start.Date)
+		start, err := time.Parse(defaultTimeFormat, item.Start.Date)
 		if err != nil {
 			return holidays, err
 		}
@@ -216,7 +216,7 @@ func formatFreeTime(holidays, weekends []time.Time) []time.Time {
 // queryCalendarAPI gets the list of holidays from the Calendar API and writes it into a JSON file
 func queryCalendarAPI(events *Events, key, calendarID, start, end, filePath string) (*Events, error) {
 	id := url.QueryEscape(calendarID)
-	query := fmt.Sprintf("key=%s&timeMin=%s&timeMax=%s", key, start, end)
+	query := fmt.Sprintf("key=%s&timeMin=%sT00:00:00Z&timeMax=%sT00:00:00Z", key, start, end)
 	url := fmt.Sprintf(eventsListURL+query, id)
 
 	f, err := os.Create(filePath)
