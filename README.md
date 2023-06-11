@@ -30,4 +30,4 @@ export TRELLO_API_TOKEN=<trello-api-token>
 ```
 
 ## Usage
-`go run main.go -start=2023-05-01T00:00:00Z -end=2023-05-31T00:00:00Z`
+`go run main.go -start=2023-06-01 -end=2024-01-31`
