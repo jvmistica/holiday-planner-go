@@ -60,7 +60,7 @@ func TestGenerateSuggestions(t *testing.T) {
 			trello.CreateBoardURL = origURL
 		}()
 
-		err = GenerateSuggestions("testKey", "2023-08-01", "2023-10-31", "test")
+		err = GenerateSuggestions("testKey", "2023-06-01", "2024-01-31", "test")
 		assert.Equal(t, "failed to create board - status code: 401", err.Error())
 	})
 
@@ -122,7 +122,7 @@ func TestGenerateSuggestions(t *testing.T) {
 			trello.CreateListURL = origURL2
 		}()
 
-		err = GenerateSuggestions("testKey", "2023-08-01", "2023-10-31", "test")
+		err = GenerateSuggestions("testKey", "2023-06-01", "2024-01-31", "test")
 		assert.Equal(t, "failed to create list - status code: 401", err.Error())
 	})
 
@@ -198,7 +198,7 @@ func TestGenerateSuggestions(t *testing.T) {
 			trello.CreateCardURL = origURL3
 		}()
 
-		err = GenerateSuggestions("testKey", "2023-08-01", "2023-10-31", "test")
+		err = GenerateSuggestions("testKey", "2023-06-01", "2024-01-31", "test")
 		assert.Equal(t, "failed to create card - status code: 401", err.Error())
 	})
 
@@ -263,7 +263,7 @@ func TestGenerateSuggestions(t *testing.T) {
 			trello.CreateCardURL = origURL3
 		}()
 
-		err = GenerateSuggestions("testKey", "2023-08-01", "2023-10-31", "test")
+		err = GenerateSuggestions("testKey", "2023-06-01", "2024-01-31", "test")
 		assert.Nil(t, err)
 	})
 }

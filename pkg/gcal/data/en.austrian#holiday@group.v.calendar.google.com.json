@@ -1,7 +1,21 @@
 {
     "summary": "Holidays in Austria",
-    "nextSyncToken": "CMDu0emHs_8CEAAYASCn_tSAAg==",
+    "nextSyncToken": "CICx5O3Wu_8CEAAYASDHsumAAg==",
     "items": [
+        {
+            "summary": "Corpus Christi",
+            "description": "Public holiday",
+            "start": {
+                "date": "2023-06-08"
+            }
+        },
+        {
+            "summary": "Father's Day",
+            "description": "Observance\nTo hide observances, go to Google Calendar Settings \u003e Holidays in Austria",
+            "start": {
+                "date": "2023-06-11"
+            }
+        },
         {
             "summary": "Assumption of Mary",
             "description": "Public holiday",
