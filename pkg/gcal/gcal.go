@@ -13,7 +13,7 @@ import (
 
 var (
 	defaultTimeFormat          = "2006-01-02"
-	defaultResultDir           = "./pkg/gcal/data/%s"
+	defaultFilePath            = "./pkg/gcal/data/%s.json"
 	defaultMinDaysWithoutLeave = 3
 	eventsListURL              = "https://www.googleapis.com/calendar/v3/calendars/%s/events?"
 )
@@ -49,10 +49,10 @@ type Vacation struct {
 	Count int
 }
 
-// GetCalendarEvents
+// GetCalendarEvents returns all holidays, weekends, and suggested vacation leaves
 func GetCalendarEvents(key, start, end, calendarID string) ([]*Vacation, []*Suggestion, error) {
 	var events *Events
-	filePath := fmt.Sprintf(defaultResultDir, fmt.Sprintf("%s.%s", calendarID, "json")) // change filePath
+	filePath := fmt.Sprintf(defaultFilePath, calendarID)
 
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		fmt.Println("Initiating GET request..")

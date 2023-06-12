@@ -9,13 +9,14 @@ import (
 )
 
 var (
-	defaultBoardName  = "Holidays"
-	defaultBackground = "sky"
-	trelloAPIKey      = os.Getenv("TRELLO_API_KEY")
-	trelloAPIToken    = os.Getenv("TRELLO_API_TOKEN")
-	createBoardURL    = "https://api.trello.com/1/boards/"
-	createCardURL     = "https://api.trello.com/1/cards"
-	createListURL     = "https://api.trello.com/1/boards/%s/lists"
+	trelloAPIKey   = os.Getenv("TRELLO_API_KEY")
+	trelloAPIToken = os.Getenv("TRELLO_API_TOKEN")
+
+	createBoardURL = "https://api.trello.com/1/boards/"
+	createCardURL  = "https://api.trello.com/1/cards"
+	createListURL  = "https://api.trello.com/1/boards/%s/lists"
+
+	defaultBoardBackground = "sky"
 )
 
 // Response is the structure of the Calendar API's response
@@ -24,7 +25,7 @@ type Response struct {
 }
 
 // CreateBoard creates a board on Trello and returns the board ID
-func CreateBoard(board string) (string, error) {
+func CreateBoard(boardName string) (string, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest(http.MethodPost, createBoardURL, nil)
 	if err != nil {
@@ -34,8 +35,8 @@ func CreateBoard(board string) (string, error) {
 	q := req.URL.Query()
 	q.Add("key", trelloAPIKey)
 	q.Add("token", trelloAPIToken)
-	q.Add("name", board)
-	q.Add("prefs_background", defaultBackground)
+	q.Add("name", boardName)
+	q.Add("prefs_background", defaultBoardBackground)
 	req.URL.RawQuery = q.Encode()
 
 	res, err := client.Do(req)
@@ -63,9 +64,9 @@ func CreateBoard(board string) (string, error) {
 }
 
 // CreateList creates a list on Trello and returns the list ID
-func CreateList(board, list, position string) (string, error) {
+func CreateList(boardID, listName, position string) (string, error) {
 	client := &http.Client{}
-	url := fmt.Sprintf(createListURL, board)
+	url := fmt.Sprintf(createListURL, boardID)
 	req, err := http.NewRequest(http.MethodPost, url, nil)
 	if err != nil {
 		return "", err
@@ -74,8 +75,8 @@ func CreateList(board, list, position string) (string, error) {
 	q := req.URL.Query()
 	q.Add("key", trelloAPIKey)
 	q.Add("token", trelloAPIToken)
-	q.Add("name", list)
-	q.Add("pos", position)
+	q.Add("name", listName)
+	q.Add("pos", position) // order of the list
 	req.URL.RawQuery = q.Encode()
 
 	res, err := client.Do(req)
@@ -103,7 +104,7 @@ func CreateList(board, list, position string) (string, error) {
 }
 
 // CreateCard creates a card on Trello and returns the card ID
-func CreateCard(list, card string) (string, error) {
+func CreateCard(listID, cardName string) (string, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest(http.MethodPost, createCardURL, nil)
 	if err != nil {
@@ -113,8 +114,8 @@ func CreateCard(list, card string) (string, error) {
 	q := req.URL.Query()
 	q.Add("key", trelloAPIKey)
 	q.Add("token", trelloAPIToken)
-	q.Add("name", card)
-	q.Add("idList", list)
+	q.Add("name", cardName)
+	q.Add("idList", listID)
 	req.URL.RawQuery = q.Encode()
 
 	res, err := client.Do(req)

@@ -268,10 +268,10 @@ func TestQueryCalendarAPI(t *testing.T) {
 func TestGetCalendarEvents(t *testing.T) {
 	t.Run("file does not exist", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		origDir := defaultResultDir
-		defaultResultDir = tmpDir + "/%s"
+		origDir := defaultFilePath
+		defaultFilePath = tmpDir + "/%s"
 		defer func() {
-			defaultResultDir = origDir
+			defaultFilePath = origDir
 		}()
 
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -315,13 +315,13 @@ func TestGetCalendarEvents(t *testing.T) {
 
 	t.Run("file exists", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		origDir := defaultResultDir
-		defaultResultDir = tmpDir + "/%s"
+		origDir := defaultFilePath
+		defaultFilePath = tmpDir + "%s"
 		defer func() {
-			defaultResultDir = origDir
+			defaultFilePath = origDir
 		}()
 
-		f, err := os.Create(tmpDir + "/test.json")
+		f, err := os.Create(tmpDir + "test")
 		assert.Nil(t, err)
 		defer f.Close()
 
@@ -355,13 +355,13 @@ func TestGetCalendarEvents(t *testing.T) {
 
 	t.Run("error parsing JSON file", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		origDir := defaultResultDir
-		defaultResultDir = tmpDir + "/%s"
+		origDir := defaultFilePath
+		defaultFilePath = tmpDir + "/%s"
 		defer func() {
-			defaultResultDir = origDir
+			defaultFilePath = origDir
 		}()
 
-		f, err := os.Create(tmpDir + "/test.json")
+		f, err := os.Create(tmpDir + "test")
 		assert.Nil(t, err)
 		defer f.Close()
 
@@ -376,10 +376,10 @@ func TestGetCalendarEvents(t *testing.T) {
 
 	t.Run("error querying calendar API", func(t *testing.T) {
 		tmpDir := "/not/exist"
-		origDir := defaultResultDir
-		defaultResultDir = tmpDir + "/%s"
+		origDir := defaultFilePath
+		defaultFilePath = tmpDir + "/%s"
 		defer func() {
-			defaultResultDir = origDir
+			defaultFilePath = origDir
 		}()
 
 		v, s, err := GetCalendarEvents("abc", "2023-08-01T00:00:00Z", "2023-09-30T00:00:00Z", "test")
@@ -390,10 +390,10 @@ func TestGetCalendarEvents(t *testing.T) {
 
 	t.Run("error parsing date while getting holidays", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		origDir := defaultResultDir
-		defaultResultDir = tmpDir + "/%s"
+		origDir := defaultFilePath
+		defaultFilePath = tmpDir + "/%s"
 		defer func() {
-			defaultResultDir = origDir
+			defaultFilePath = origDir
 		}()
 
 		f, err := os.Create(tmpDir + "/test.json")
@@ -427,10 +427,10 @@ func TestGetCalendarEvents(t *testing.T) {
 
 	t.Run("error parsing date while getting weekends", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		origDir := defaultResultDir
-		defaultResultDir = tmpDir + "/%s"
+		origDir := defaultFilePath
+		defaultFilePath = tmpDir + "/%s"
 		defer func() {
-			defaultResultDir = origDir
+			defaultFilePath = origDir
 		}()
 
 		f, err := os.Create(tmpDir + "/test.json")

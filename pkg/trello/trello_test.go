@@ -8,6 +8,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var (
+	defaultBoardName = "Holidays"
+)
+
 func TestCreateBoard(t *testing.T) {
 	t.Run("invalid URL", func(t *testing.T) {
 		origURL := createBoardURL

@@ -7,9 +7,6 @@ test:
 cover:
 	@go tool cover -html cover.out -o cover.html
 
-run:
-	@go run main.go
-
 build:
 	@go build -v ./...
 
