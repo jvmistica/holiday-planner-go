@@ -9,12 +9,15 @@ import (
 )
 
 var (
+	DefaultBoardName          = "Holidays"
+	ListSuggestions           = "Leave suggestions"
+	ListVacationWithoutLeaves = "Vacation without leaves"
+	CreateBoardURL            = "https://api.trello.com/1/boards/"
+	CreateCardURL             = "https://api.trello.com/1/cards"
+	CreateListURL             = "https://api.trello.com/1/boards/%s/lists"
+
 	trelloAPIKey   = os.Getenv("TRELLO_API_KEY")
 	trelloAPIToken = os.Getenv("TRELLO_API_TOKEN")
-
-	createBoardURL = "https://api.trello.com/1/boards/"
-	createCardURL  = "https://api.trello.com/1/cards"
-	createListURL  = "https://api.trello.com/1/boards/%s/lists"
 
 	defaultBoardBackground = "sky"
 )
@@ -27,7 +30,7 @@ type Response struct {
 // CreateBoard creates a board on Trello and returns the board ID
 func CreateBoard(boardName string) (string, error) {
 	client := &http.Client{}
-	req, err := http.NewRequest(http.MethodPost, createBoardURL, nil)
+	req, err := http.NewRequest(http.MethodPost, CreateBoardURL, nil)
 	if err != nil {
 		return "", err
 	}
@@ -66,7 +69,7 @@ func CreateBoard(boardName string) (string, error) {
 // CreateList creates a list on Trello and returns the list ID
 func CreateList(boardID, listName, position string) (string, error) {
 	client := &http.Client{}
-	url := fmt.Sprintf(createListURL, boardID)
+	url := fmt.Sprintf(CreateListURL, boardID)
 	req, err := http.NewRequest(http.MethodPost, url, nil)
 	if err != nil {
 		return "", err
@@ -106,7 +109,7 @@ func CreateList(boardID, listName, position string) (string, error) {
 // CreateCard creates a card on Trello and returns the card ID
 func CreateCard(listID, cardName string) (string, error) {
 	client := &http.Client{}
-	req, err := http.NewRequest(http.MethodPost, createCardURL, nil)
+	req, err := http.NewRequest(http.MethodPost, CreateCardURL, nil)
 	if err != nil {
 		return "", err
 	}

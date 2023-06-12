@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -12,8 +13,9 @@ import (
 )
 
 var (
-	defaultTimeFormat          = "2006-01-02"
-	defaultFilePath            = "./pkg/gcal/data/%s.json"
+	DefaultTimeFormat = "2006-01-02"
+	DefaultFilePath   = "./pkg/gcal/data/%s.json"
+
 	defaultMinDaysWithoutLeave = 3
 	eventsListURL              = "https://www.googleapis.com/calendar/v3/calendars/%s/events?"
 )
@@ -52,10 +54,10 @@ type Vacation struct {
 // GetCalendarEvents returns all holidays, weekends, and suggested vacation leaves
 func GetCalendarEvents(key, start, end, calendarID string) ([]*Vacation, []*Suggestion, error) {
 	var events *Events
-	filePath := fmt.Sprintf(defaultFilePath, calendarID)
+	filePath := fmt.Sprintf(DefaultFilePath, calendarID)
 
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		fmt.Println("Initiating GET request..")
+		log.Print("Initiating GET request..")
 
 		var err error
 		events, err = queryCalendarAPI(events, key, calendarID, start, end, filePath)
@@ -63,7 +65,7 @@ func GetCalendarEvents(key, start, end, calendarID string) ([]*Vacation, []*Sugg
 			return nil, nil, err
 		}
 	} else {
-		fmt.Println("Skipping GET request..")
+		log.Print("Skipping GET request..")
 
 		data, err := os.ReadFile(filePath)
 		if err != nil {
@@ -96,7 +98,7 @@ func GetCalendarEvents(key, start, end, calendarID string) ([]*Vacation, []*Sugg
 func getHolidays(events *Events) ([]time.Time, error) {
 	var holidays []time.Time
 	for _, item := range events.Items {
-		start, err := time.Parse(defaultTimeFormat, item.Start.Date)
+		start, err := time.Parse(DefaultTimeFormat, item.Start.Date)
 		if err != nil {
 			return holidays, err
 		}
@@ -109,12 +111,12 @@ func getHolidays(events *Events) ([]time.Time, error) {
 // getWeekends returns a list of dates that fall on Saturdays and Sundays
 func getWeekends(startDate, endDate string) ([]time.Time, error) {
 	var weekends []time.Time
-	start, err := time.Parse(defaultTimeFormat, startDate)
+	start, err := time.Parse(DefaultTimeFormat, startDate)
 	if err != nil {
 		return weekends, err
 	}
 
-	end, err := time.Parse(defaultTimeFormat, endDate)
+	end, err := time.Parse(DefaultTimeFormat, endDate)
 	if err != nil {
 		return weekends, err
 	}
