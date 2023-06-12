@@ -10,11 +10,6 @@ import (
 
 var (
 	defaultBoardName  = "Holidays"
-	suggestion        = "Leave Suggestions"
-	q1                = "Jan - Mar"
-	q2                = "Apr - Jun"
-	q3                = "Jul - Sep"
-	q4                = "Oct - Dec"
 	defaultBackground = "sky"
 	trelloAPIKey      = os.Getenv("TRELLO_API_KEY")
 	trelloAPIToken    = os.Getenv("TRELLO_API_TOKEN")

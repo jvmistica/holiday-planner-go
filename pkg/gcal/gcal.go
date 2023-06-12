@@ -12,11 +12,9 @@ import (
 )
 
 var (
-	defaultCalendarID          = "en.austrian#holiday@group.v.calendar.google.com"
 	defaultTimeFormat          = "2006-01-02"
 	defaultResultDir           = "./pkg/gcal/data/%s"
 	defaultMinDaysWithoutLeave = 3
-	key                        = os.Getenv("GCP_API_KEY")
 	eventsListURL              = "https://www.googleapis.com/calendar/v3/calendars/%s/events?"
 )
 
@@ -121,7 +119,7 @@ func getWeekends(startDate, endDate string) ([]time.Time, error) {
 		return weekends, err
 	}
 
-	for d := start; d.After(end) == false; d = d.AddDate(0, 0, 1) {
+	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
 		if d.Weekday().String() == "Saturday" || d.Weekday().String() == "Sunday" {
 			weekends = append(weekends, d)
 		}
@@ -249,7 +247,9 @@ func queryCalendarAPI(events *Events, key, calendarID, start, end, filePath stri
 		return nil, err
 	}
 
-	f.Write(s)
+	if _, err := f.Write(s); err != nil {
+		return nil, err
+	}
 
 	return events, nil
 }

@@ -207,7 +207,8 @@ func TestQueryCalendarAPI(t *testing.T) {
 	t.Run("error parsing JSON response", func(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`invalid`))
+			_, err := w.Write([]byte(`invalid`))
+			assert.Nil(t, err)
 		}))
 		defer ts.Close()
 
@@ -227,7 +228,7 @@ func TestQueryCalendarAPI(t *testing.T) {
 	t.Run("successful", func(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{
+			_, err := w.Write([]byte(`{
 				"summary": "Holidays in Austria",
 				"nextSyncToken": "CMDu0emHs_8CEAAYASCn_tSAAg==",
 				"items": [{
@@ -244,6 +245,7 @@ func TestQueryCalendarAPI(t *testing.T) {
 						"date": "2023-09-25"
 					}
 				}]}`))
+			assert.Nil(t, err)
 		}))
 		defer ts.Close()
 
@@ -274,7 +276,7 @@ func TestGetCalendarEvents(t *testing.T) {
 
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{
+			_, err := w.Write([]byte(`{
 				"summary": "Holidays in Austria",
 				"nextSyncToken": "CMDu0emHs_8CEAAYASCn_tSAAg==",
 				"items": [{
@@ -291,6 +293,7 @@ func TestGetCalendarEvents(t *testing.T) {
 						"date": "2023-09-25"
 					}
 				}]}`))
+			assert.Nil(t, err)
 		}))
 		defer ts.Close()
 
@@ -322,7 +325,7 @@ func TestGetCalendarEvents(t *testing.T) {
 		assert.Nil(t, err)
 		defer f.Close()
 
-		f.Write([]byte(`{
+		_, err = f.Write([]byte(`{
 			"summary": "Holidays in Austria",
 			"nextSyncToken": "CMDu0emHs_8CEAAYASCn_tSAAg==",
 			"items": [{
@@ -339,6 +342,7 @@ func TestGetCalendarEvents(t *testing.T) {
 					"date": "2023-09-25"
 				}
 			}]}`))
+		assert.Nil(t, err)
 
 		v, s, err := GetCalendarEvents("abc", "2023-08-01", "2023-09-30", "test")
 		assert.Nil(t, err)
@@ -361,7 +365,8 @@ func TestGetCalendarEvents(t *testing.T) {
 		assert.Nil(t, err)
 		defer f.Close()
 
-		f.Write([]byte(`invalid`))
+		_, err = f.Write([]byte(`invalid`))
+		assert.Nil(t, err)
 
 		v, s, err := GetCalendarEvents("abc", "2023-08-01T00:00:00Z", "2023-09-30T00:00:00Z", "test")
 		assert.NotNil(t, err)
@@ -395,7 +400,7 @@ func TestGetCalendarEvents(t *testing.T) {
 		assert.Nil(t, err)
 		defer f.Close()
 
-		f.Write([]byte(`{
+		_, err = f.Write([]byte(`{
 			"summary": "Holidays in Austria",
 			"nextSyncToken": "CMDu0emHs_8CEAAYASCn_tSAAg==",
 			"items": [{
@@ -412,6 +417,7 @@ func TestGetCalendarEvents(t *testing.T) {
 					"date": "2023/09/25"
 				}
 			}]}`))
+		assert.Nil(t, err)
 
 		v, s, err := GetCalendarEvents("abc", "2023-08-01T00:00:00Z", "2023-09-30T00:00:00Z", "test")
 		assert.NotNil(t, err)
@@ -431,7 +437,7 @@ func TestGetCalendarEvents(t *testing.T) {
 		assert.Nil(t, err)
 		defer f.Close()
 
-		f.Write([]byte(`{
+		_, err = f.Write([]byte(`{
 			"summary": "Holidays in Austria",
 			"nextSyncToken": "CMDu0emHs_8CEAAYASCn_tSAAg==",
 			"items": [{
@@ -448,6 +454,7 @@ func TestGetCalendarEvents(t *testing.T) {
 					"date": "2023-09-25"
 				}
 			}]}`))
+		assert.Nil(t, err)
 
 		v, s, err := GetCalendarEvents("abc", "2023/08/01T00:00:00Z", "2023/09/30T00:00:00Z", "test")
 		assert.NotNil(t, err)

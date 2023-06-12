@@ -70,7 +70,8 @@ func TestCreateBoard(t *testing.T) {
 	t.Run("successful", func(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"id": "abc123a36eaf8d75e160000f"}`))
+			_, err := w.Write([]byte(`{"id": "abc123a36eaf8d75e160000f"}`))
+			assert.Nil(t, err)
 		}))
 		defer ts.Close()
 
@@ -150,7 +151,8 @@ func TestCreateList(t *testing.T) {
 	t.Run("successful", func(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"id": "abc123a36ech8d75e160000f"}`))
+			_, err := w.Write([]byte(`{"id": "abc123a36ech8d75e160000f"}`))
+			assert.Nil(t, err)
 		}))
 		defer ts.Close()
 
@@ -229,7 +231,8 @@ func TestCreateCard(t *testing.T) {
 	t.Run("successful", func(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"id": "abc123a36eaf8d78u160000f"}`))
+			_, err := w.Write([]byte(`{"id": "abc123a36eaf8d78u160000f"}`))
+			assert.Nil(t, err)
 		}))
 		defer ts.Close()
 
