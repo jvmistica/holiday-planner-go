@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/jvmistica/gcal/pkg/suggestion"
+	"github.com/jvmistica/holiday-planner-go/pkg/suggestion"
 )
 
 var (

@@ -1,4 +1,4 @@
-name: gcal
+name: holiday-planner-go
 
 on:
   push:

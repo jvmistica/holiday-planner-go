@@ -3,8 +3,8 @@ package suggestion
 import (
 	"fmt"
 
-	"github.com/jvmistica/gcal/pkg/gcal"
-	"github.com/jvmistica/gcal/pkg/trello"
+	"github.com/jvmistica/holiday-planner-go/pkg/gcal"
+	"github.com/jvmistica/holiday-planner-go/pkg/trello"
 )
 
 // GenerateSuggestions queries Google Calendar for holidays and generates a trello.List of long weekends and suggested leaves on Trello

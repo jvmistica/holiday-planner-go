@@ -6,8 +6,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/jvmistica/gcal/pkg/gcal"
-	"github.com/jvmistica/gcal/pkg/trello"
+	"github.com/jvmistica/holiday-planner-go/pkg/gcal"
+	"github.com/jvmistica/holiday-planner-go/pkg/trello"
 	"github.com/stretchr/testify/assert"
 )
 

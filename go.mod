@@ -1,4 +1,4 @@
-module github.com/jvmistica/gcal
+module github.com/jvmistica/holiday-planner-go
 
 go 1.20
 
