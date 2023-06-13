@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -12,11 +13,10 @@ import (
 )
 
 var (
-	defaultCalendarID          = "en.austrian#holiday@group.v.calendar.google.com"
-	defaultTimeFormat          = "2006-01-02T00:00:00Z"
-	defaultResultDir           = "./pkg/gcal/data/%s"
+	DefaultTimeFormat = "2006-01-02"
+	DefaultFilePath   = "./pkg/gcal/data/%s.json"
+
 	defaultMinDaysWithoutLeave = 3
-	key                        = os.Getenv("GCP_API_KEY")
 	eventsListURL              = "https://www.googleapis.com/calendar/v3/calendars/%s/events?"
 )
 
@@ -51,13 +51,13 @@ type Vacation struct {
 	Count int
 }
 
-// GetCalendarEvents
+// GetCalendarEvents returns all holidays, weekends, and suggested vacation leaves
 func GetCalendarEvents(key, start, end, calendarID string) ([]*Vacation, []*Suggestion, error) {
 	var events *Events
-	filePath := fmt.Sprintf(defaultResultDir, fmt.Sprintf("%s.%s", calendarID, "json")) // change filePath
+	filePath := fmt.Sprintf(DefaultFilePath, calendarID)
 
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		fmt.Println("Initiating GET request..")
+		log.Print("Initiating GET request..")
 
 		var err error
 		events, err = queryCalendarAPI(events, key, calendarID, start, end, filePath)
@@ -65,7 +65,7 @@ func GetCalendarEvents(key, start, end, calendarID string) ([]*Vacation, []*Sugg
 			return nil, nil, err
 		}
 	} else {
-		fmt.Println("Skipping GET request..")
+		log.Print("Skipping GET request..")
 
 		data, err := os.ReadFile(filePath)
 		if err != nil {
@@ -98,7 +98,7 @@ func GetCalendarEvents(key, start, end, calendarID string) ([]*Vacation, []*Sugg
 func getHolidays(events *Events) ([]time.Time, error) {
 	var holidays []time.Time
 	for _, item := range events.Items {
-		start, err := time.Parse("2006-01-02", item.Start.Date)
+		start, err := time.Parse(DefaultTimeFormat, item.Start.Date)
 		if err != nil {
 			return holidays, err
 		}
@@ -111,17 +111,17 @@ func getHolidays(events *Events) ([]time.Time, error) {
 // getWeekends returns a list of dates that fall on Saturdays and Sundays
 func getWeekends(startDate, endDate string) ([]time.Time, error) {
 	var weekends []time.Time
-	start, err := time.Parse(defaultTimeFormat, startDate)
+	start, err := time.Parse(DefaultTimeFormat, startDate)
 	if err != nil {
 		return weekends, err
 	}
 
-	end, err := time.Parse(defaultTimeFormat, endDate)
+	end, err := time.Parse(DefaultTimeFormat, endDate)
 	if err != nil {
 		return weekends, err
 	}
 
-	for d := start; d.After(end) == false; d = d.AddDate(0, 0, 1) {
+	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
 		if d.Weekday().String() == "Saturday" || d.Weekday().String() == "Sunday" {
 			weekends = append(weekends, d)
 		}
@@ -216,7 +216,7 @@ func formatFreeTime(holidays, weekends []time.Time) []time.Time {
 // queryCalendarAPI gets the list of holidays from the Calendar API and writes it into a JSON file
 func queryCalendarAPI(events *Events, key, calendarID, start, end, filePath string) (*Events, error) {
 	id := url.QueryEscape(calendarID)
-	query := fmt.Sprintf("key=%s&timeMin=%s&timeMax=%s", key, start, end)
+	query := fmt.Sprintf("key=%s&timeMin=%sT00:00:00Z&timeMax=%sT00:00:00Z", key, start, end)
 	url := fmt.Sprintf(eventsListURL+query, id)
 
 	f, err := os.Create(filePath)
@@ -249,7 +249,9 @@ func queryCalendarAPI(events *Events, key, calendarID, start, end, filePath stri
 		return nil, err
 	}
 
-	f.Write(s)
+	if _, err := f.Write(s); err != nil {
+		return nil, err
+	}
 
 	return events, nil
 }

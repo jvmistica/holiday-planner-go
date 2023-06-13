@@ -67,23 +67,23 @@ func TestGetWeekends(t *testing.T) {
 		wantErr       bool
 	}{
 		{
-			startDate:     "2023-05-01T00:00:00Z",
-			endDate:       "2023-05-31T00:00:00Z",
+			startDate:     "2023-05-01",
+			endDate:       "2023-05-31",
 			expectedCount: 8,
 		},
 		{
-			startDate:     "2023-12-15T00:00:00Z",
-			endDate:       "2024-01-15T00:00:00Z",
+			startDate:     "2023-12-15",
+			endDate:       "2024-01-15",
 			expectedCount: 10,
 		},
 		{
-			startDate: "2023/12/15T00:00:00Z",
-			endDate:   "2024-01-15T00:00:00Z",
+			startDate: "2023/12/15",
+			endDate:   "2024-01-15",
 			wantErr:   true,
 		},
 		{
-			startDate: "2023-12-15T00:00:00Z",
-			endDate:   "2024/01/15T00:00:00Z",
+			startDate: "2023-12-15",
+			endDate:   "2024/01/15",
 			wantErr:   true,
 		},
 	}
@@ -135,8 +135,8 @@ func TestGetSuggestions(t *testing.T) {
 		assert.Equal(t, 1, len(result))
 		assert.Equal(t, 10, result[0].Vacation)
 		assert.Equal(t, 3, result[0].Leaves)
-		assert.Equal(t, "2023-12-23T00:00:00Z", result[0].Start.Format(defaultTimeFormat))
-		assert.Equal(t, "2024-01-01T00:00:00Z", result[0].End.Format(defaultTimeFormat))
+		assert.Equal(t, "2023-12-23", result[0].Start.Format(DefaultTimeFormat))
+		assert.Equal(t, "2024-01-01", result[0].End.Format(DefaultTimeFormat))
 	})
 
 	t.Run("three pairs", func(t *testing.T) {
@@ -150,12 +150,12 @@ func TestGetSuggestions(t *testing.T) {
 		assert.Equal(t, 2, len(result))
 		assert.Equal(t, 4, result[0].Vacation)
 		assert.Equal(t, 0, result[0].Leaves)
-		assert.Equal(t, "2023-05-22T00:00:00Z", result[0].Start.Format(defaultTimeFormat))
-		assert.Equal(t, "2023-05-25T00:00:00Z", result[0].End.Format(defaultTimeFormat))
+		assert.Equal(t, "2023-05-22", result[0].Start.Format(DefaultTimeFormat))
+		assert.Equal(t, "2023-05-25", result[0].End.Format(DefaultTimeFormat))
 		assert.Equal(t, 5, result[1].Vacation)
 		assert.Equal(t, 1, result[1].Leaves)
-		assert.Equal(t, "2023-05-24T00:00:00Z", result[1].Start.Format(defaultTimeFormat))
-		assert.Equal(t, "2023-05-28T00:00:00Z", result[1].End.Format(defaultTimeFormat))
+		assert.Equal(t, "2023-05-24", result[1].Start.Format(DefaultTimeFormat))
+		assert.Equal(t, "2023-05-28", result[1].End.Format(DefaultTimeFormat))
 	})
 }
 
@@ -173,14 +173,27 @@ func TestFormatFreeTime(t *testing.T) {
 
 	result := formatFreeTime(h, w)
 	assert.Equal(t, 8, len(result))
-	assert.Equal(t, "2023-12-21T00:00:00Z", result[0].Format(defaultTimeFormat))
-	assert.Equal(t, "2024-01-01T00:00:00Z", result[7].Format(defaultTimeFormat))
+	assert.Equal(t, "2023-12-21", result[0].Format(DefaultTimeFormat))
+	assert.Equal(t, "2024-01-01", result[7].Format(DefaultTimeFormat))
 }
 
 func TestQueryCalendarAPI(t *testing.T) {
 	t.Run("failed to create JSON file", func(t *testing.T) {
 		var events *Events
 		events, err := queryCalendarAPI(events, "def", "test", "2023-08-01T00:00:00Z", "2023-09-30T00:00:00Z", "/not/exist")
+		assert.NotNil(t, err)
+		assert.Nil(t, events)
+	})
+
+	t.Run("error querying Google calendar", func(t *testing.T) {
+		origURL := eventsListURL
+		eventsListURL = "/not/exist"
+		defer func() {
+			eventsListURL = origURL
+		}()
+
+		var events *Events
+		events, err := queryCalendarAPI(events, "def", "test", "2023-08-01T00:00:00Z", "2023-09-30T00:00:00Z", t.TempDir()+"test.json")
 		assert.NotNil(t, err)
 		assert.Nil(t, events)
 	})
@@ -207,7 +220,8 @@ func TestQueryCalendarAPI(t *testing.T) {
 	t.Run("error parsing JSON response", func(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`invalid`))
+			_, err := w.Write([]byte(`invalid`))
+			assert.Nil(t, err)
 		}))
 		defer ts.Close()
 
@@ -227,7 +241,7 @@ func TestQueryCalendarAPI(t *testing.T) {
 	t.Run("successful", func(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{
+			_, err := w.Write([]byte(`{
 				"summary": "Holidays in Austria",
 				"nextSyncToken": "CMDu0emHs_8CEAAYASCn_tSAAg==",
 				"items": [{
@@ -244,6 +258,7 @@ func TestQueryCalendarAPI(t *testing.T) {
 						"date": "2023-09-25"
 					}
 				}]}`))
+			assert.Nil(t, err)
 		}))
 		defer ts.Close()
 
@@ -266,15 +281,15 @@ func TestQueryCalendarAPI(t *testing.T) {
 func TestGetCalendarEvents(t *testing.T) {
 	t.Run("file does not exist", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		origDir := defaultResultDir
-		defaultResultDir = tmpDir + "/%s"
+		origDir := DefaultFilePath
+		DefaultFilePath = tmpDir + "%s"
 		defer func() {
-			defaultResultDir = origDir
+			DefaultFilePath = origDir
 		}()
 
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{
+			_, err := w.Write([]byte(`{
 				"summary": "Holidays in Austria",
 				"nextSyncToken": "CMDu0emHs_8CEAAYASCn_tSAAg==",
 				"items": [{
@@ -291,6 +306,7 @@ func TestGetCalendarEvents(t *testing.T) {
 						"date": "2023-09-25"
 					}
 				}]}`))
+			assert.Nil(t, err)
 		}))
 		defer ts.Close()
 
@@ -301,28 +317,28 @@ func TestGetCalendarEvents(t *testing.T) {
 			eventsListURL = origURL
 		}()
 
-		v, s, err := GetCalendarEvents("abc", "2023-08-01T00:00:00Z", "2023-09-30T00:00:00Z", "test")
+		v, s, err := GetCalendarEvents("abc", "2023-08-01", "2023-09-30", "test")
 		assert.Nil(t, err)
 		assert.Equal(t, 1, len(v))
 		assert.Equal(t, 3, v[0].Count)
-		assert.Equal(t, "2023-09-23T00:00:00Z", v[0].Start.Format(defaultTimeFormat))
-		assert.Equal(t, "2023-09-25T00:00:00Z", v[0].End.Format(defaultTimeFormat))
+		assert.Equal(t, "2023-09-23", v[0].Start.Format(DefaultTimeFormat))
+		assert.Equal(t, "2023-09-25", v[0].End.Format(DefaultTimeFormat))
 		assert.Nil(t, s)
 	})
 
 	t.Run("file exists", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		origDir := defaultResultDir
-		defaultResultDir = tmpDir + "/%s"
+		origDir := DefaultFilePath
+		DefaultFilePath = tmpDir + "%s"
 		defer func() {
-			defaultResultDir = origDir
+			DefaultFilePath = origDir
 		}()
 
-		f, err := os.Create(tmpDir + "/test.json")
+		f, err := os.Create(tmpDir + "test")
 		assert.Nil(t, err)
 		defer f.Close()
 
-		f.Write([]byte(`{
+		_, err = f.Write([]byte(`{
 			"summary": "Holidays in Austria",
 			"nextSyncToken": "CMDu0emHs_8CEAAYASCn_tSAAg==",
 			"items": [{
@@ -339,29 +355,68 @@ func TestGetCalendarEvents(t *testing.T) {
 					"date": "2023-09-25"
 				}
 			}]}`))
+		assert.Nil(t, err)
 
-		v, s, err := GetCalendarEvents("abc", "2023-08-01T00:00:00Z", "2023-09-30T00:00:00Z", "test")
+		v, s, err := GetCalendarEvents("abc", "2023-08-01", "2023-09-30", "test")
 		assert.Nil(t, err)
 		assert.Equal(t, 1, len(v))
 		assert.Equal(t, 3, v[0].Count)
-		assert.Equal(t, "2023-09-23T00:00:00Z", v[0].Start.Format(defaultTimeFormat))
-		assert.Equal(t, "2023-09-25T00:00:00Z", v[0].End.Format(defaultTimeFormat))
+		assert.Equal(t, "2023-09-23", v[0].Start.Format(DefaultTimeFormat))
+		assert.Equal(t, "2023-09-25", v[0].End.Format(DefaultTimeFormat))
+		assert.Nil(t, s)
+	})
+
+	t.Run("error unmarshalling JSON file", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		origDir := DefaultFilePath
+		DefaultFilePath = tmpDir + "%s"
+		defer func() {
+			DefaultFilePath = origDir
+		}()
+
+		f, err := os.Create(tmpDir + "test")
+		assert.Nil(t, err)
+		defer f.Close()
+
+		_, err = f.Write([]byte(`{
+			"summary": "Holidays in Austria",
+			"nextSyncToken": "CMDu0emHs_8CEAAYASCn_tSAAg==",
+			"items": [[{
+				"summary": "Assumption of Mary",
+				"description": "Public holiday",
+				"start": {
+				    "date": "2023-08-15"
+				}
+			},
+			{
+				"summary": "Yom Kippur",
+				"description": "Observance\nTo hide observances, go to Google Calendar Settings \u003e Holidays in Austria",
+				"start": {
+					"date": "2023-09-25"
+				}
+			}]]}`))
+		assert.Nil(t, err)
+
+		v, s, err := GetCalendarEvents("abc", "2023-08-01", "2023-09-30", "test")
+		assert.NotNil(t, err)
+		assert.Nil(t, v)
 		assert.Nil(t, s)
 	})
 
 	t.Run("error parsing JSON file", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		origDir := defaultResultDir
-		defaultResultDir = tmpDir + "/%s"
+		origDir := DefaultFilePath
+		DefaultFilePath = tmpDir + "%s"
 		defer func() {
-			defaultResultDir = origDir
+			DefaultFilePath = origDir
 		}()
 
-		f, err := os.Create(tmpDir + "/test.json")
+		f, err := os.Create(tmpDir + "test")
 		assert.Nil(t, err)
 		defer f.Close()
 
-		f.Write([]byte(`invalid`))
+		_, err = f.Write([]byte(`invalid`))
+		assert.Nil(t, err)
 
 		v, s, err := GetCalendarEvents("abc", "2023-08-01T00:00:00Z", "2023-09-30T00:00:00Z", "test")
 		assert.NotNil(t, err)
@@ -371,10 +426,10 @@ func TestGetCalendarEvents(t *testing.T) {
 
 	t.Run("error querying calendar API", func(t *testing.T) {
 		tmpDir := "/not/exist"
-		origDir := defaultResultDir
-		defaultResultDir = tmpDir + "/%s"
+		origDir := DefaultFilePath
+		DefaultFilePath = tmpDir + "%s"
 		defer func() {
-			defaultResultDir = origDir
+			DefaultFilePath = origDir
 		}()
 
 		v, s, err := GetCalendarEvents("abc", "2023-08-01T00:00:00Z", "2023-09-30T00:00:00Z", "test")
@@ -385,17 +440,17 @@ func TestGetCalendarEvents(t *testing.T) {
 
 	t.Run("error parsing date while getting holidays", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		origDir := defaultResultDir
-		defaultResultDir = tmpDir + "/%s"
+		origDir := DefaultFilePath
+		DefaultFilePath = tmpDir + "%s"
 		defer func() {
-			defaultResultDir = origDir
+			DefaultFilePath = origDir
 		}()
 
-		f, err := os.Create(tmpDir + "/test.json")
+		f, err := os.Create(tmpDir + "test")
 		assert.Nil(t, err)
 		defer f.Close()
 
-		f.Write([]byte(`{
+		_, err = f.Write([]byte(`{
 			"summary": "Holidays in Austria",
 			"nextSyncToken": "CMDu0emHs_8CEAAYASCn_tSAAg==",
 			"items": [{
@@ -412,6 +467,7 @@ func TestGetCalendarEvents(t *testing.T) {
 					"date": "2023/09/25"
 				}
 			}]}`))
+		assert.Nil(t, err)
 
 		v, s, err := GetCalendarEvents("abc", "2023-08-01T00:00:00Z", "2023-09-30T00:00:00Z", "test")
 		assert.NotNil(t, err)
@@ -421,17 +477,17 @@ func TestGetCalendarEvents(t *testing.T) {
 
 	t.Run("error parsing date while getting weekends", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		origDir := defaultResultDir
-		defaultResultDir = tmpDir + "/%s"
+		origDir := DefaultFilePath
+		DefaultFilePath = tmpDir + "%s"
 		defer func() {
-			defaultResultDir = origDir
+			DefaultFilePath = origDir
 		}()
 
-		f, err := os.Create(tmpDir + "/test.json")
+		f, err := os.Create(tmpDir + "test")
 		assert.Nil(t, err)
 		defer f.Close()
 
-		f.Write([]byte(`{
+		_, err = f.Write([]byte(`{
 			"summary": "Holidays in Austria",
 			"nextSyncToken": "CMDu0emHs_8CEAAYASCn_tSAAg==",
 			"items": [{
@@ -448,6 +504,7 @@ func TestGetCalendarEvents(t *testing.T) {
 					"date": "2023-09-25"
 				}
 			}]}`))
+		assert.Nil(t, err)
 
 		v, s, err := GetCalendarEvents("abc", "2023/08/01T00:00:00Z", "2023/09/30T00:00:00Z", "test")
 		assert.NotNil(t, err)

@@ -10,25 +10,25 @@ import (
 
 func TestCreateBoard(t *testing.T) {
 	t.Run("invalid URL", func(t *testing.T) {
-		origURL := createBoardURL
-		createBoardURL = "testInvalidURL%s"
+		origURL := CreateBoardURL
+		CreateBoardURL = "testInvalidURL%s"
 		defer func() {
-			createBoardURL = origURL
+			CreateBoardURL = origURL
 		}()
 
-		result, err := CreateBoard(defaultBoardName)
+		result, err := CreateBoard(DefaultBoardName)
 		assert.Equal(t, "", result)
 		assert.NotNil(t, err.Error())
 	})
 
 	t.Run("unsupported protocol", func(t *testing.T) {
-		origURL := createBoardURL
-		createBoardURL = "testInvalidURL"
+		origURL := CreateBoardURL
+		CreateBoardURL = "testInvalidURL"
 		defer func() {
-			createBoardURL = origURL
+			CreateBoardURL = origURL
 		}()
 
-		result, err := CreateBoard(defaultBoardName)
+		result, err := CreateBoard(DefaultBoardName)
 		assert.Equal(t, "", result)
 		assert.NotNil(t, err.Error())
 	})
@@ -39,13 +39,13 @@ func TestCreateBoard(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		origURL := createBoardURL
-		createBoardURL = ts.URL
+		origURL := CreateBoardURL
+		CreateBoardURL = ts.URL
 		defer func() {
-			createBoardURL = origURL
+			CreateBoardURL = origURL
 		}()
 
-		result, err := CreateBoard(defaultBoardName)
+		result, err := CreateBoard(DefaultBoardName)
 		assert.Equal(t, "", result)
 		assert.NotNil(t, err)
 	})
@@ -56,13 +56,13 @@ func TestCreateBoard(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		origURL := createBoardURL
-		createBoardURL = ts.URL
+		origURL := CreateBoardURL
+		CreateBoardURL = ts.URL
 		defer func() {
-			createBoardURL = origURL
+			CreateBoardURL = origURL
 		}()
 
-		result, err := CreateBoard(defaultBoardName)
+		result, err := CreateBoard(DefaultBoardName)
 		assert.Equal(t, "", result)
 		assert.Equal(t, "failed to create board - status code: 401", err.Error())
 	})
@@ -70,17 +70,18 @@ func TestCreateBoard(t *testing.T) {
 	t.Run("successful", func(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"id": "abc123a36eaf8d75e160000f"}`))
+			_, err := w.Write([]byte(`{"id": "abc123a36eaf8d75e160000f"}`))
+			assert.Nil(t, err)
 		}))
 		defer ts.Close()
 
-		origURL := createBoardURL
-		createBoardURL = ts.URL
+		origURL := CreateBoardURL
+		CreateBoardURL = ts.URL
 		defer func() {
-			createBoardURL = origURL
+			CreateBoardURL = origURL
 		}()
 
-		result, err := CreateBoard(defaultBoardName)
+		result, err := CreateBoard(DefaultBoardName)
 		assert.Equal(t, "abc123a36eaf8d75e160000f", result)
 		assert.Nil(t, err)
 	})
@@ -88,10 +89,10 @@ func TestCreateBoard(t *testing.T) {
 
 func TestCreateList(t *testing.T) {
 	t.Run("invalid URL", func(t *testing.T) {
-		origURL := createListURL
-		createListURL = "testInvalidURL"
+		origURL := CreateListURL
+		CreateListURL = "testInvalidURL"
 		defer func() {
-			createListURL = origURL
+			CreateListURL = origURL
 		}()
 
 		result, err := CreateList("abc123a36eaf8d75e160000f", "sample list unauthorized", "1")
@@ -100,10 +101,10 @@ func TestCreateList(t *testing.T) {
 	})
 
 	t.Run("unsupported protocol", func(t *testing.T) {
-		origURL := createListURL
-		createListURL = "testInvalidURL%s"
+		origURL := CreateListURL
+		CreateListURL = "testInvalidURL%s"
 		defer func() {
-			createListURL = origURL
+			CreateListURL = origURL
 		}()
 
 		result, err := CreateList("abc123a36eaf8d75e160000f", "sample list unauthorized", "1")
@@ -118,10 +119,10 @@ func TestCreateList(t *testing.T) {
 		defer ts.Close()
 
 		ts.URL = ts.URL + "/%s"
-		origURL := createListURL
-		createListURL = ts.URL
+		origURL := CreateListURL
+		CreateListURL = ts.URL
 		defer func() {
-			createListURL = origURL
+			CreateListURL = origURL
 		}()
 
 		result, err := CreateList("abc123a36eaf8d75e160000f", "sample list unauthorized", "1")
@@ -136,10 +137,10 @@ func TestCreateList(t *testing.T) {
 		defer ts.Close()
 
 		ts.URL = ts.URL + "/%s"
-		origURL := createListURL
-		createListURL = ts.URL
+		origURL := CreateListURL
+		CreateListURL = ts.URL
 		defer func() {
-			createListURL = origURL
+			CreateListURL = origURL
 		}()
 
 		result, err := CreateList("abc123a36eaf8d75e160000f", "sample list unauthorized", "1")
@@ -150,15 +151,16 @@ func TestCreateList(t *testing.T) {
 	t.Run("successful", func(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"id": "abc123a36ech8d75e160000f"}`))
+			_, err := w.Write([]byte(`{"id": "abc123a36ech8d75e160000f"}`))
+			assert.Nil(t, err)
 		}))
 		defer ts.Close()
 
 		ts.URL = ts.URL + "/%s"
-		origURL := createListURL
-		createListURL = ts.URL
+		origURL := CreateListURL
+		CreateListURL = ts.URL
 		defer func() {
-			createListURL = origURL
+			CreateListURL = origURL
 		}()
 
 		result, err := CreateList("abc123a36eaf8d75e160000f", "sample list", "1")
@@ -169,10 +171,10 @@ func TestCreateList(t *testing.T) {
 
 func TestCreateCard(t *testing.T) {
 	t.Run("invalid URL", func(t *testing.T) {
-		origURL := createCardURL
-		createCardURL = "testInvalidURL%s"
+		origURL := CreateCardURL
+		CreateCardURL = "testInvalidURL%s"
 		defer func() {
-			createCardURL = origURL
+			CreateCardURL = origURL
 		}()
 
 		result, err := CreateCard("abc123a36ech8d75e160000f", "sample card unauthorized")
@@ -181,10 +183,10 @@ func TestCreateCard(t *testing.T) {
 	})
 
 	t.Run("unsupported protocol", func(t *testing.T) {
-		origURL := createCardURL
-		createCardURL = "testInvalidURL"
+		origURL := CreateCardURL
+		CreateCardURL = "testInvalidURL"
 		defer func() {
-			createCardURL = origURL
+			CreateCardURL = origURL
 		}()
 
 		result, err := CreateCard("abc123a36ech8d75e160000f", "sample card unauthorized")
@@ -198,10 +200,10 @@ func TestCreateCard(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		origURL := createCardURL
-		createCardURL = ts.URL
+		origURL := CreateCardURL
+		CreateCardURL = ts.URL
 		defer func() {
-			createCardURL = origURL
+			CreateCardURL = origURL
 		}()
 
 		result, err := CreateCard("abc123a36ech8d75e160000f", "sample card unauthorized")
@@ -215,10 +217,10 @@ func TestCreateCard(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		origURL := createCardURL
-		createCardURL = ts.URL
+		origURL := CreateCardURL
+		CreateCardURL = ts.URL
 		defer func() {
-			createCardURL = origURL
+			CreateCardURL = origURL
 		}()
 
 		result, err := CreateCard("abc123a36ech8d75e160000f", "sample card unauthorized")
@@ -229,14 +231,15 @@ func TestCreateCard(t *testing.T) {
 	t.Run("successful", func(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"id": "abc123a36eaf8d78u160000f"}`))
+			_, err := w.Write([]byte(`{"id": "abc123a36eaf8d78u160000f"}`))
+			assert.Nil(t, err)
 		}))
 		defer ts.Close()
 
-		origURL := createCardURL
-		createCardURL = ts.URL
+		origURL := CreateCardURL
+		CreateCardURL = ts.URL
 		defer func() {
-			createCardURL = origURL
+			CreateCardURL = origURL
 		}()
 
 		result, err := CreateCard("abc123a36ech8d75e160000f", "sample card")
