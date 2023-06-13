@@ -185,6 +185,19 @@ func TestQueryCalendarAPI(t *testing.T) {
 		assert.Nil(t, events)
 	})
 
+	t.Run("error querying Google calendar", func(t *testing.T) {
+		origURL := eventsListURL
+		eventsListURL = "/not/exist"
+		defer func() {
+			eventsListURL = origURL
+		}()
+
+		var events *Events
+		events, err := queryCalendarAPI(events, "def", "test", "2023-08-01T00:00:00Z", "2023-09-30T00:00:00Z", t.TempDir()+"test.json")
+		assert.NotNil(t, err)
+		assert.Nil(t, events)
+	})
+
 	t.Run("error - unauthorized", func(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusUnauthorized)
@@ -269,7 +282,7 @@ func TestGetCalendarEvents(t *testing.T) {
 	t.Run("file does not exist", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		origDir := DefaultFilePath
-		DefaultFilePath = tmpDir + "/%s"
+		DefaultFilePath = tmpDir + "%s"
 		defer func() {
 			DefaultFilePath = origDir
 		}()
@@ -353,10 +366,47 @@ func TestGetCalendarEvents(t *testing.T) {
 		assert.Nil(t, s)
 	})
 
+	t.Run("error unmarshalling JSON file", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		origDir := DefaultFilePath
+		DefaultFilePath = tmpDir + "%s"
+		defer func() {
+			DefaultFilePath = origDir
+		}()
+
+		f, err := os.Create(tmpDir + "test")
+		assert.Nil(t, err)
+		defer f.Close()
+
+		_, err = f.Write([]byte(`{
+			"summary": "Holidays in Austria",
+			"nextSyncToken": "CMDu0emHs_8CEAAYASCn_tSAAg==",
+			"items": [[{
+				"summary": "Assumption of Mary",
+				"description": "Public holiday",
+				"start": {
+				    "date": "2023-08-15"
+				}
+			},
+			{
+				"summary": "Yom Kippur",
+				"description": "Observance\nTo hide observances, go to Google Calendar Settings \u003e Holidays in Austria",
+				"start": {
+					"date": "2023-09-25"
+				}
+			}]]}`))
+		assert.Nil(t, err)
+
+		v, s, err := GetCalendarEvents("abc", "2023-08-01", "2023-09-30", "test")
+		assert.NotNil(t, err)
+		assert.Nil(t, v)
+		assert.Nil(t, s)
+	})
+
 	t.Run("error parsing JSON file", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		origDir := DefaultFilePath
-		DefaultFilePath = tmpDir + "/%s"
+		DefaultFilePath = tmpDir + "%s"
 		defer func() {
 			DefaultFilePath = origDir
 		}()
@@ -377,7 +427,7 @@ func TestGetCalendarEvents(t *testing.T) {
 	t.Run("error querying calendar API", func(t *testing.T) {
 		tmpDir := "/not/exist"
 		origDir := DefaultFilePath
-		DefaultFilePath = tmpDir + "/%s"
+		DefaultFilePath = tmpDir + "%s"
 		defer func() {
 			DefaultFilePath = origDir
 		}()
@@ -391,12 +441,12 @@ func TestGetCalendarEvents(t *testing.T) {
 	t.Run("error parsing date while getting holidays", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		origDir := DefaultFilePath
-		DefaultFilePath = tmpDir + "/%s"
+		DefaultFilePath = tmpDir + "%s"
 		defer func() {
 			DefaultFilePath = origDir
 		}()
 
-		f, err := os.Create(tmpDir + "/test.json")
+		f, err := os.Create(tmpDir + "test")
 		assert.Nil(t, err)
 		defer f.Close()
 
@@ -428,12 +478,12 @@ func TestGetCalendarEvents(t *testing.T) {
 	t.Run("error parsing date while getting weekends", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		origDir := DefaultFilePath
-		DefaultFilePath = tmpDir + "/%s"
+		DefaultFilePath = tmpDir + "%s"
 		defer func() {
 			DefaultFilePath = origDir
 		}()
 
-		f, err := os.Create(tmpDir + "/test.json")
+		f, err := os.Create(tmpDir + "test")
 		assert.Nil(t, err)
 		defer f.Close()
 
