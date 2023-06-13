@@ -30,4 +30,7 @@ export TRELLO_API_TOKEN=<trello-api-token>
 ```
 
 ## Usage
-`go run main.go -start=2023-06-01 -end=2024-01-31`
+`go run main.go -start=2023-06-01 -end=2024-01-31`  
+  
+**Trello**
+<img width="1137" alt="Screenshot 2023-06-13 at 12 43 22" src="https://github.com/jvmistica/holiday-planner-go/assets/53989745/05200227-15be-4249-9b82-b85c48e1f6d1">
