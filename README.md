@@ -1,5 +1,5 @@
 # holiday-planner-go
-![Build status](https://github.com/jvmistica/holiday-planner-go/workflows/holiday-planner-go/badge.svg)
+![Build status](https://github.com/jvmistica/holiday-planner-go/workflows/build/badge.svg)
 ![Coverage](https://img.shields.io/sonar/coverage/jvmistica_holiday-planner-go/main?server=https%3A%2F%2Fsonarcloud.io)
 
 A tool that fetches holidays from Google Calendar and adds them together with weekends to provide vacation leave suggestions.

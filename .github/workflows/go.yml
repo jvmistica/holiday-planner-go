@@ -1,4 +1,4 @@
-name: holiday-planner-go
+name: build
 
 on:
   push:
